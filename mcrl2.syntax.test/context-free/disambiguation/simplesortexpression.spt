@@ -1,0 +1,23 @@
+module simplesortexpression
+language mCRL2
+start symbol MCRL2Spec
+
+test functions as arguments not allowed [[
+	init delta;
+	sort Mine = Int->Int#Nat->Bool->Pos ;
+]] parse to [[init delta; sort Mine = Int->((Int#Nat)->(Bool->Pos));]]
+
+test no single args allowed [[
+	init delta;
+	sort Mine = Int#Int;
+]] parse fails
+
+test functions in actions bind stronger [[
+	init delta;
+	act moeilijk : Pos # Int -> Bool # Int;
+]] parse to [[init delta; act moeilijk : Pos # (Int -> Bool) # Int;]]
+
+test functions in functions can not be arguments [[
+	init delta;
+	map moeilijk : Pos # Int -> Bool -> Nat;
+]] parse to [[init delta; map moeilijk : Pos # Int -> (Bool -> Nat);]]

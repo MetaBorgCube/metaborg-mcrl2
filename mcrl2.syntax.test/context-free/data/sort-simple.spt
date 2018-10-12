@@ -1,0 +1,19 @@
+module sort-simple
+language mCRL2
+start symbol MCRL2Spec
+
+// test simple sort declarations
+
+fixture [[
+	init delta;
+	sort Start;
+	[[...]]
+]]
+
+test 1 id [[
+	Mine;
+]]
+
+test more ids [[
+	Mine, Yours, His;
+]]

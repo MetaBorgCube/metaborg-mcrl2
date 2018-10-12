@@ -1,0 +1,80 @@
+module globals
+language mCRL2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	[[...]]
+]]
+
+test layout required after glob [[
+	globx :Pos;
+]] parse fails
+
+test proper glob [[
+	glob x:Pos;
+]] parse succeeds
+
+test glob must be followed by ; [[
+	glob x:Pos
+]] parse fails
+
+test multiple same typed globs [[
+	glob x,y:Pos;
+]] parse succeeds
+
+test multiple different typed globs [[
+	glob x:Pos, y:MySort;
+]] parse succeeds
+
+test multiple same and different typed globs [[
+	glob x,y:Pos, z,w:Nat;
+]] parse succeeds
+
+test only id allowed for glob decl [[
+	glob (x) : Pos;
+]] parse fails
+
+test no bracket around glob decl [[
+	glob (x:Pos);
+]] parse fails
+
+test required layout after glob [[
+	globx : Pos;
+]] parse fails
+
+test layout allowed before , [[
+	glob x
+	, y :Pos;
+]] parse succeeds
+
+test layout allowed after , [[
+	glob x, y:Pos, z,
+	w:Nat;
+]] parse succeeds
+
+test layout allowed around : [[
+	glob x
+	:Pos, y,z :
+	Nat;
+]] parse succeeds
+
+test layout allowed before ; [[
+	glob x:Pos
+	;
+]] parse succeeds
+
+test layout allowed after ; [[
+	glob x:Pos;
+	y:Nat;
+]] parse succeeds
+
+test multiple globs allowed [[
+	glob x:Pos; y :
+		Nat;
+	glob z,w:Mine;
+]] parse succeeds
+
+test combination of , and ; separators [[
+	glob x:Pos; y: Nat, b:Bool;
+]] parse succeeds

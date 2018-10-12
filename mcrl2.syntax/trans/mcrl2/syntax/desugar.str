@@ -1,0 +1,18 @@
+module mcrl2/syntax/desugar
+
+imports
+
+  signatures/-
+
+rules
+
+  desugar-all =
+    desugar-product-sorts;
+    desugar-function-sorts;
+    desugar-commexprs
+
+  desugar-product-sorts = bottomup(try(Product(\ (hd, tl) -> [hd|tl] \)))
+
+  desugar-function-sorts = bottomup(try(Function(?Product(<id>) + MkSingleton, id)))
+
+  desugar-commexprs = bottomup(try(CommExpr(\ (hd, tl) -> [hd|tl] \, id)))

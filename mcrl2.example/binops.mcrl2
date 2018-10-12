@@ -1,0 +1,7 @@
+init delta;
+map get : Int;
+eqn get =
+
+	[1,2,3] .0
+	
+;

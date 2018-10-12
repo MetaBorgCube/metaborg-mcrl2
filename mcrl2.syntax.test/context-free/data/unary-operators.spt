@@ -1,0 +1,118 @@
+module unary-operators
+language mCRL2
+start symbol MCRL2Spec
+
+// not concerned with type errors or missing map or var declarations
+fixture [[
+	init delta;
+	map myfunc : Bool;
+	eqn myfunc = [[...]];
+]]
+
+test negation [[
+	!true
+]] parse succeeds
+
+test negation space allowed [[
+	! false
+]] parse succeeds
+
+test set complement [[
+	!{n:Nat | n > 2}
+]] parse succeeds
+
+test set complement space allowed [[
+	! {}
+]] parse succeeds
+
+test minus [[
+	-5
+]] parse succeeds
+
+test minus space allowed [[
+	-	5
+]] parse succeeds
+
+test list size [[
+	#[1,2,3]
+]] parse succeeds
+
+test list size space allowed [[
+	# []
+]] parse succeeds
+
+test function update [[
+	otherfunc[x->5]
+]] parse succeeds
+
+test function update no split arrow [[
+	otherfunc[x- >4]
+]] parse fails
+
+test function update space allowed before brackets [[
+	otherfunc [x->4]
+]] parse succeeds
+
+test function update space allowed around expression [[
+	otherfunc	[ x->4 ]
+]] parse succeeds
+
+test function application (noargs) [[
+	otherfunc()
+]] parse fails
+
+test function application (noargs no parens) [[
+	otherfunc
+]] parse succeeds
+
+test function application (1 arg) [[
+	otherfunc(1)
+]] parse succeeds
+
+test function application (more args) [[
+	otherfunc(1,2,3)
+]] parse succeeds
+
+test function application layout allowed around parentheses [[
+	otherfunc
+	(
+		1,2,3
+	)
+	
+]] parse succeeds
+
+test forall [[
+	forall m, m': Pos . (m > 1 && m' > 1) => n != m * m'
+]] parse succeeds
+
+test exists [[
+	exists n, m: Nat, p: Pos . n + m == p
+]] parse succeeds
+
+test lambda [[
+	lambda x,y: Nat, p: Pos . x + y == p
+]] parse succeeds
+
+test where clause [[
+	x whr x = 5 end
+]]
+
+test no empty where clause [[
+	x whr end
+]] parse fails
+
+test multiple where clause assignments [[
+	x whr z=1, x=2 end
+]] parse succeeds
+
+test where clause requires layout between ids (after whr) [[
+	x whrx=1 end
+]] parse fails
+
+test where clause requires layout between ids (before end) [[
+	x whr x=yend
+]] parse fails
+
+test where clause does not require space between other expressions [[
+	x whr x=(y)end
+]] parse succeeds

@@ -1,0 +1,3 @@
+act a : Nat;
+act a : Int;
+init a(1);

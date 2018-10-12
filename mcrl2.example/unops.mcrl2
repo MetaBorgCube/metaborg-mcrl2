@@ -1,0 +1,5 @@
+init delta;
+map myfunc : Bool;
+eqn myfunc =
+	!true
+;

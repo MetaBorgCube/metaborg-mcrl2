@@ -1,0 +1,8 @@
+sort Mine;
+
+init delta;
+	sort Array = Nat -> Bool;
+	map set: Array # Nat -> Array;
+	var a: Array;
+	    n: Nat;
+	eqn set(a, n) = a[n -> true];

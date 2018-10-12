@@ -1,0 +1,67 @@
+module var
+language mCRL2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	[[...]]
+]]
+
+test layout after var required [[
+	varp :Pos; eqn get=p;
+]] parse fails
+
+test var followed by eqn [[
+	var x:Pos; eqn get(x) = x;
+]] parse succeeds
+
+test var must be followed by eqn [[
+	var x:Pos;
+]] parse fails
+
+test var must be followed by ; [[
+	var x:Pos
+	eqn get(x)=x;
+]] parse fails
+
+test multiple same typed vars [[
+	var x,y:Pos;eqn get(x) = 5;
+]] parse succeeds
+
+test multiple different typed vars with ; separator [[
+	var x:Pos; y:MySort;eqn get(x) = 5;
+]] parse succeeds
+
+test multiple same and different typed vars with , separator [[
+	var x,y:Pos, z,w:Nat; eqn get(x)=5;
+]] parse succeeds
+
+test required layout after var [[
+	varx : Pos; eqn get(x)=5;
+]] parse fails
+
+test layout allowed before , [[
+	var x
+	, y :Pos; eqn get(x)=5;
+]] parse succeeds
+
+test layout allowed after , [[
+	var x, y:Pos, z,
+	w:Nat;eqn get(x)=5;
+]] parse succeeds
+
+test layout allowed around : [[
+	var x
+	:Pos, y,z :
+	Nat; eqn get(x) = 5;
+]] parse succeeds
+
+test layout allowed before ; [[
+	var x:Pos
+	; eqn get(x) = 5;
+]] parse succeeds
+
+test layout allowed after ; [[
+	var x:Pos;
+	eqn get(x)=5;
+]] parse succeeds

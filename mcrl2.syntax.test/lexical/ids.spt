@@ -1,0 +1,65 @@
+module ids
+language mCRL2
+start symbol MCRL2Spec
+
+// test IDs
+
+test valid id [[
+	init delta;
+]] parse succeeds
+
+test underscore at start [[
+	init _delta;
+]] parse succeeds
+
+test underscore in middle [[
+	init del_ta;
+]] parse succeeds
+
+test underscore at end [[
+	init delta_;
+]] parse succeeds
+
+test FAIL prime at start [[
+	init 'delta;
+]] parse fails
+
+test prime in middle [[
+	init del'ta;
+]] parse succeeds
+
+test prime at end [[
+	init delta';
+]] parse succeeds
+
+test capital at start [[
+	init Delta;
+]] parse succeeds
+
+test capital in middle [[
+	init deLta;
+]] parse succeeds
+
+test capital at end [[
+	init deltA;
+]] parse succeeds
+
+test FAIL number at start [[
+	init 0delta;
+]] parse fails
+
+test number in middle [[
+	init del0ta;
+]] parse succeeds
+
+test number at end [[
+	init delta6;
+]] parse succeeds
+
+test FAIL on dash [[
+	init del-ta;
+]] parse fails
+
+test FAIL on star [[
+	init del*ta;
+]] parse fails

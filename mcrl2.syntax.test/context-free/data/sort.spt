@@ -1,0 +1,18 @@
+module sort
+language mCRL2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	[[...]]
+]]
+
+test layout required after sort [[
+	sortX;
+]] parse fails
+
+test multiple sort declarations allowed [[
+	sort X;
+	sort Y;
+]] parse succeeds
+

@@ -1,0 +1,4 @@
+init a(leaf(5));
+sort Tree = struct leaf(Int) | node(left : Tree, Tree, Int) ? isnode;
+
+act a : Tree;

@@ -1,0 +1,32 @@
+module pp
+
+imports
+
+  libstratego-gpp
+  libspoofax/sdf/pp
+  libspoofax/editor/refactoring/-
+  mcrl2/syntax/pp
+
+rules
+
+  editor-format:
+    (node, _, ast, path, project-path) -> (filename, result)
+    with
+      ext      := <get-extension> path
+    ; filename := <guarantee-extension(|$[pp.[ext]])> path
+    ; result   := <pp-mCRL2-string> node
+
+rules
+
+  pp-mCRL2Syntax-string =
+    pp-mCRL2-string
+
+  pp-partial-mCRL2Syntax-string =
+    pp-partial-mCRL2-string
+
+  pp-partial-mCRL2Syntax-string(|sort) =
+    pp-partial-mCRL2-string(|sort)
+
+rules
+  
+  construct-textual-change = construct-textual-change(pp-partial-mCRL2-string, parenthesize, override-reconstruction, resugar)

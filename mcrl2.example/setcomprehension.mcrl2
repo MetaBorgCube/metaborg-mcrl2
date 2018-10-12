@@ -1,0 +1,2 @@
+init p({x:Int | x < 3});
+proc p(x : Set(Int)) = delta;

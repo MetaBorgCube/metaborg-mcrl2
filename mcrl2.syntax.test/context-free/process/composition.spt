@@ -1,0 +1,73 @@
+module composition
+language mCRL2
+start symbol MCRL2Spec
+
+fixture [[
+	init p;
+	act a,b,c,d,e;
+	proc p = [[...]];
+]]
+
+test sequential composition [[
+	a.b
+]] parse succeeds
+
+test sequential layout [[
+	a
+	.
+	b
+]] parse succeeds
+
+test multiple sequential composition [[
+	a . b . c
+]] parse succeeds
+
+test alternative compsition [[
+	a+b
+]] parse succeeds
+
+test alternative layout [[
+	a
+	+
+	b
+]] parse succeeds
+
+test multiple alternative composition [[
+	a + b + c
+]] parse succeeds
+
+test communication merge (multi-action) [[
+	a|b
+]] parse succeeds
+
+test multiple communication merges [[
+	a | b |	c
+]] parse succeeds
+
+test sum [[
+	sum x:Nat, y,z:Bool . tau
+]] parse succeeds
+
+test sum, no empty vars [[
+	sum . tau
+]] parse fails
+
+test parallel [[
+	a || b
+]] parse succeeds
+
+test parrallel, multiple actions [[
+	a || b
+]] parse succeeds
+
+// Left merge not allowed by mcrl22lps
+// test left merge parallel [[
+// 	a ||_ b
+// ]] parse succeeds
+
+// test left merge parallel, multiple actions [[
+// 	(a + b)||_c||_
+// 	d
+// ]] parse succeeds
+
+

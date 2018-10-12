@@ -1,0 +1,56 @@
+module act
+language mCRL2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	[[...]]
+]]
+
+test multiple act specs [[
+	act Mine;
+	act Yours;
+]] parse succeeds
+
+test multiple simple acts [[
+	act Mine; Yours;
+]] parse succeeds
+
+test comma allowed [[
+	act Mine, Yours;
+]] parse succeeds
+
+test comma allowed with sort [[
+	act Mine, Yours : Nat;
+]]
+
+test no comma with different sorts [[
+	act Mine : Nat, Yours:Bool;
+]] parse fails
+
+test semi colon required [[
+	act Mine
+]] parse fails
+
+test layout after act [[
+	act
+	Mine;
+]] parse succeeds
+
+test layout around semicolon [[
+	act Mine
+	;
+	 Yours;
+]] parse succeeds
+
+test function to function [[
+	act Mine: Nat; Yours : Nat->Bool # Int->List(Pos);
+]] parse succeeds
+
+test single sort [[
+	act Mine : Nat;
+]] parse succeeds
+
+test two sorts [[
+	act Mine : Nat # Bool;
+]] parse succeeds
