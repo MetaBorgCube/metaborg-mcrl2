@@ -18,7 +18,7 @@
   <dependencies>
     <dependency>
       <groupId>org.metaborg</groupId>
-      <artifactId>mcrl2</artifactId>
+      <artifactId>mcrl2.syntax</artifactId>
       <version>0.1.0-SNAPSHOT</version>
       <type>spoofax-language</type>
     </dependency>
