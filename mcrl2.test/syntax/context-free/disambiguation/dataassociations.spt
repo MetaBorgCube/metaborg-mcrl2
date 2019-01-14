@@ -1,0 +1,96 @@
+module dataassociations
+language mcrl2
+start symbol MCRL2Spec
+
+test implication associates right [[
+	init x( true => true => true);
+]] parse to [[init x (true => (true => true));]]
+
+test or associates right [[
+	init x(true||true||true);
+]] parse to [[init x( true || (true || true) );]]
+
+test and associates right [[
+	init x (true && true && true);
+]] parse to [[init x (true && (true && true));]]
+
+test equals associated left [[
+	init x (5==5==true);
+]] parse to [[init x ((5==5)==true);]]
+
+test not equals associates left [[
+	init x (5 != 5 != true);
+]] parse to [[init x ( (5!=5)!=true );]]
+
+test less associates left [[
+	init x( 5<5<5 );
+]] parse to [[init x ((5<5)<5);]]
+
+test less or equals associates left [[
+	init x( 5<=5<=5 );
+]] parse to [[init x((5<=5)<=5);]]
+
+test larger or equals associates left [[
+	init x( 5>=5>=5 );
+]] parse to [[init x((5>=5)>=5);]]
+
+test larger or equals associates left [[
+	init x( 5>5>5 );
+]] parse to [[init x((5>5)>5);]]
+
+test in associates left [[
+	init x( 5 in [5] in [true] );
+]] parse to [[init x( (5 in [5]) in [true] );]]
+
+test head constructor associates right [[
+	init x ( 5 |> 4 |> [3] );
+]] parse to [[init x( 5|>(4|>[3]) );]]
+
+test last constructor associates left [[
+	init x ( [] <| 1 <| 2 );
+]] parse to [[init x( ([]<|1)<|2 );]]
+
+test list concatenation associates left [[
+	init x ( []++[]++[] );
+]] parse to [[init x( ([]++[])++[] );]]
+
+test addition associates left [[
+	init x (5+4+3);
+]] parse to [[init x( (5+4)+3 );]]
+
+test set/bag union associates left [[
+	init x ( {} + {1} + {2,3});
+]] parse to [[init x( ({}+{1})+{2,3} );]]
+
+test subtraction associates left [[
+	init x (5-4-3);
+]] parse to [[init x( (5-4)-3 );]]
+
+test set/bag difference associates left [[
+	init x ( {} - {1} - {2,3});
+]] parse to [[init x( ({}-{1})-{2,3} );]]
+
+test division associates left [[
+	init x ( 5/4/3 );
+]] parse to [[init x( (5/4)/3 );]]
+
+test int division associates left [[
+	init x (5 div 4 div 3);
+]] parse to [[init x ( (5 div 4) div 3);]]
+
+test int mod associates left [[
+	init x (5 mod 4 mod 3);
+]] parse to [[init x ( (5 mod 4) mod 3);]]
+
+test multiplication associates left [[
+	init x ( 5*4*3 );
+]] parse to [[init x ( (5*4)*3 );]]
+
+test set/bag intersection [[
+	init x ( {1,2} * {2,3} * {2,3,4} );
+]] parse to [[init x ( ({1,2} * {2,3}) * {2,3,4} );]]
+
+test element at associates left [[
+	init x([ [1,2] , [1] ] . 0 . 0);
+]] parse to [[ init x( ([ [1,2] , [1] ] . 0) . 0 ); ]]
+

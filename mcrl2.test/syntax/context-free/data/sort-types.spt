@@ -1,0 +1,86 @@
+module sort-types
+language mcrl2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	sort Mine;
+	sort Test = [[...]];
+]]
+
+test type Bool [[
+	Bool
+]] parse succeeds
+
+test type Pos [[
+	Pos
+]] parse succeeds
+
+test type Nat [[
+	Nat
+]] parse succeeds
+
+test type Int [[
+	Int
+]] parse succeeds
+
+test type Real [[
+	Real
+]] parse succeeds
+
+test type List [[
+	List(Bool)
+]] parse succeeds
+
+test type Set [[
+	Set(Int)
+]] parse succeeds
+
+test type Bag [[
+	Bag(Nat)
+]] parse succeeds
+
+// mCRL2 release does not support these
+// test type FSet [[
+// 	FSet(Pos)
+// ]] parse succeeds
+// 
+// test type FBag [[
+// 	FBag(Nat)
+// ]] parse succeeds
+
+test custom sort type [[
+	Mine
+]]
+
+test custom sort type nested [[
+	List(Mine)
+]]
+
+test unit type [[
+	(Nat)
+]]
+
+test type nesting [[
+	List(Bag(Int))
+]] parse succeeds
+
+test type simple function [[
+	Int -> Pos
+]] parse succeeds
+
+test type hashed function [[
+	Int # Int # Pos -> Bool
+]] parse succeeds
+
+test hashed function to simple function [[
+	Int # Pos -> Bool -> Nat
+]] parse succeeds
+
+test simple function to hashed function [[
+	Pos -> Bool # List(Int) -> Nat
+]] parse succeeds
+
+test hashed function to hashed function [[
+	Bag(Bool) # Int -> List(Int # Bool -> Pos) # Bool -> Int
+]] parse succeeds

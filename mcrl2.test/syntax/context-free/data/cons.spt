@@ -1,0 +1,71 @@
+module cons
+language mcrl2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	sort X, Y;
+	[[...]]
+]]
+
+test layout after cons required [[
+	consMine : X;
+]] parse fails
+
+test single cons, single sort [[
+	cons mine : X;
+]] parse succeeds
+
+test multiple cons, single sort [[
+	cons mine, yours:X;
+]] parse succeeds
+
+test multiple cons, multiple sorts [[
+	cons mine, yours : X; yes, no : Y;
+]] parse succeeds
+
+test single cons, multiple sorts [[
+	cons mine : X; yes : Bool # Nat -> X;
+]] parse succeeds
+
+test multiple cons in second sort [[
+	cons mine : X; yes, no : Y;
+]] parse succeeds
+
+test missing semicolon [[
+	cons mine : X
+]] parse fails
+
+test newline after cons [[
+	cons
+	mine:X;
+]] parse succeeds
+
+test newline after consname [[
+	cons mine
+	:X;
+]] parse succeeds
+
+test newline after type separator [[
+	cons mine:
+	X;
+]] parse succeeds
+
+test newline after sort [[
+	cons mine:X
+	;
+]] parse succeeds
+
+test newline after first consdecl [[
+	cons mine : Nat # Nat -> X;
+	x:Y;
+]] parse succeeds
+
+test no space after cons [[
+	consmine : X;
+]] parse fails
+
+test multiple cons declarations allowed [[
+	cons mine : X;
+	cons yours : Y;
+]] parse succeeds

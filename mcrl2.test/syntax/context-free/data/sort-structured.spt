@@ -1,0 +1,59 @@
+module sort-structured
+language mcrl2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	sort A;
+	[[...]]
+]]
+
+test full tree sort [[
+	sort Tree = struct leaf(value: A) ? is_leaf
+                 | node(left: Tree, right: Tree) ? is_node;
+]] parse succeeds
+
+test no projection function in leaf [[
+	sort Tree = struct leaf(A) ? is_leaf
+				| node (left: Tree, right: Tree) ? is_node;
+]] parse succeeds
+
+test no projection function in left side of node [[
+	sort Tree = struct leaf(value: A) ? is_leaf
+                 | node(Tree, right: Tree) ? is_node;
+]] parse succeeds
+
+test no projection function in right side of node [[
+	sort Tree = struct leaf(value: A) ? is_leaf
+                 | node(left: Tree, Tree) ? is_node;
+]] parse succeeds
+
+test no recognizer function for leaf [[
+	sort Tree = struct leaf(value: A)
+                 | node(left: Tree, right: Tree) ? is_node;
+]] parse succeeds
+
+test no recognizer function for node [[
+	sort Tree = struct leaf(value: A) ? is_leaf
+                 | node(left: Tree, right: Tree);
+]] parse succeeds
+
+test empty structured sort [[
+	sort E = struct c;
+]] parse succeeds
+
+test empty structured sort with recognizer [[
+	sort E = struct c ? r;
+]] parse succeeds
+
+test function sort in full structured sort [[
+	sort B = struct c(f : Bool -> Nat) ? r;
+]] parse succeeds
+
+test function sort without projection [[
+	sort B = struct c(Int -> List(Bag(Pos))) ? r;
+]] parse succeeds
+
+test function sort without recongizer [[
+	sort B = struct c(p:Pos->Bool);
+]] parse succeeds

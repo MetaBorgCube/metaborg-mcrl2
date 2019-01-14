@@ -1,0 +1,24 @@
+module general
+language mcrl2
+
+test init requires layout [[
+	initdelta;
+]] parse fails
+
+test init surrounded by specs [[
+	proc p=tau;
+	init p;
+	sort Mine;
+]] parse succeeds
+
+test init before specs [[
+	init p;
+	proc p=tau;
+	sort Mine;
+]] parse succeeds
+
+test init after specs [[
+	proc p =tau;
+	sort Mine;
+	init p;
+]]

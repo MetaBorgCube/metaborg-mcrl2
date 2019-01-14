@@ -1,0 +1,61 @@
+module proc
+language mcrl2
+start symbol MCRL2Spec
+
+test no empty proc allowed (with ;) [[
+	init delta;
+	proc ;
+]] parse fails
+
+test no empty proc allowed (without ;) [[
+	init delta;
+	proc
+]] parse fails
+
+test multiple proc specifications [[
+	init p;
+	proc p = tau;
+	proc q = tau;
+]] parse succeeds
+
+test layout after proc [[
+	init p;
+	proc
+	p=tau;
+]] parse succeeds
+
+test layout after proc name [[
+	init p; proc p
+	=tau;
+]] parse succeeds
+
+test layout after = [[
+	init p;proc p=
+		tau;
+]] parse succeeds
+
+test semicolon required [[
+	init p;proc p = tau
+]] parse fails
+
+test semicolon allowed before semicolon [[
+	init p;proc p=tau
+	;
+]] parse succeeds
+
+test no empty parenthesis [[
+	init p; proc p()=tau;
+]] parse fails
+
+test one var [[
+	init p; proc p(a:Bool)=tau;
+]] parse succeeds
+
+test two vars same sort [[
+	init p; proc p(a,b:Bool)=tau;
+]] parse succeeds
+
+test more vars, more sorts [[
+	init p; proc p(a,b:Bool, c,d : Bool#Bool->Nat)=tau;
+]] parse succeeds
+

@@ -1,0 +1,11 @@
+module Main
+
+imports
+
+  Syntax
+
+language
+
+  extensions : mcrl2
+
+  provider : target/metaborg/stratego.ctree

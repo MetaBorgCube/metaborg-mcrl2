@@ -1,9 +1,0 @@
-module mCRL2Syntax
-
-imports
-
-  mcrl2/syntax/Spec
-
-context-free start-symbols
-
-  MCRL2Spec

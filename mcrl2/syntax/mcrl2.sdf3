@@ -1,0 +1,9 @@
+module mcrl2
+
+imports
+
+  mcrl2/Spec
+
+context-free start-symbols
+
+  MCRL2Spec

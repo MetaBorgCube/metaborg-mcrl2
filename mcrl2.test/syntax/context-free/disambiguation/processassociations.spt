@@ -1,0 +1,40 @@
+module processassociations
+language mcrl2
+start symbol MCRL2Spec
+
+test no if-then in if-then-else [[
+	init true -> true -> delta <> tau;
+]] parse to [[init (true) -> (true->delta<>tau);]]
+
+test sum is right associative [[
+	init sum x:Int . sum y: Int . delta;
+]] parse to [[init sum x:Int . (sum y:Int . delta);]]
+
+test alternative is left associative [[
+	init delta + tau + delta;
+]] parse to [[init (delta + tau) + delta;]]
+
+test parallel is right associative [[
+	init delta || tau || delta;
+]] parse to [[init delta || (tau || delta);]]
+
+test if-then is right associative [[
+	init true -> true -> true -> delta;
+]] parse to [[init true -> (true -> (true-> delta));]]
+
+test if-then-else is right associative [[
+	init true -> true -> false -> delta <> true->p <> tau <> tau;
+]] parse to [[init true -> (true -> (false -> delta <> true -> p <> tau) <> tau);]]
+
+
+// Untill operator not allowed by mcrl22lps so no tests
+
+test sequential is right associative [[
+	init tau . delta . tau . delta;
+]] parse to [[init tau . (delta . (tau.delta));]]
+
+// it is impossible for @ to be grouped as it allows a ProcessExpression on the left and a DataExpression on the right
+
+test Synchronization is left associative [[
+	init tau | delta | tau;
+]] parse to [[init (tau | delta)|tau ;]]

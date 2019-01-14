@@ -1,0 +1,124 @@
+module if
+
+language mcrl2
+start symbol MCRL2Spec
+
+test if & sequential (sequential first) [[
+	init a . true -> b;
+]] parse to [[init a . (true -> b);]]
+
+test if & sequential (if first) [[
+	init true -> a.b;
+]] parse to [[init true -> (a.b);]]
+
+
+test if and alternative (alternative first) [[
+	init a + true -> b;
+]] parse to [[init a + (true->b);]]
+
+test if and alternative (if first) [[
+	init false -> a + b;
+]] parse to [[init (false -> a) + b;]]
+
+
+test if and sum (sum first) [[
+	init sum x:Pos . x<2 -> a;
+]] parse to [[init sum x:Pos . (x<2 -> a);]]
+
+test if and sum (if first) [[
+	init true -> sum x:Pos . a;
+]] parse to [[init true -> (sum x:Pos . a);]]
+
+
+test if and parallel (parallel first) [[
+	init a || true -> b;
+]] parse to [[init a || (true -> b);]]
+
+test if and parallel (if first) [[
+	init false -> b || a;
+]] parse to [[init (false -> b) || a;]]
+
+
+test if & at (if first) [[
+	init true -> b@1;
+]] parse to [[init true -> (b@1);]]
+
+
+test if & synchronization (synchronization first) [[
+	init a | true->b;
+]] parse to [[init a | (true->b);]]
+
+
+test if & synchronization (if first) [[
+	init false->b | a;
+]] parse to [[init false->(b | a);]]
+
+
+test if & if-else (if first) [[
+	init  true -> false -> delta <> true-> p <> tau;
+]] parse to [[init true -> (false->delta<>(true->p<>tau));]]
+
+test if & if-else (if-else first) [[
+	init  false -> delta <> true-> p <> true -> tau;
+]] parse to [[init false->delta<>(true->p<>(true->tau));]]
+
+
+test if-else & sequential (sequential first) [[
+	init a . true -> b <> c;
+]] parse to [[init a . (true -> b <> c);]]
+
+test if-else & sequential (if-else first) [[
+	init true -> a <> c.b;
+]] parse to [[init true -> a<>(c.b);]]
+
+
+test if-else and alternative (alternative first) [[
+	init a + true -> b <> c;
+]] parse to [[init a + (true->b<>c);]]
+
+test if-else and alternative (if-else first) [[
+	init false -> a <> c+ b;
+]] parse to [[init (false -> a<>c) + b;]]
+
+test if-else and parallel (parallel first) [[
+	init a || true -> b <> c;
+]] parse to [[init a || (true -> b<>c);]]
+
+test if-else and parallel (if-else first) [[
+	init false -> b <>c|| a;
+]] parse to [[init (false -> b<>c) || a;]]
+
+test if-else & at (if-else first) [[
+	init true -> b<>c@1;
+]] parse to [[init true -> b<>(c@1);]]
+
+test if-else & synchronization (synchronization first) [[
+	init a | true->b<>c;
+]] parse to [[init a | (true->b<>c);]]
+
+test if-else & synchronization (if-else first) [[
+	init false->b<>c | a;
+]] parse to [[init false->b<>(c | a);]]
+
+
+
+
+test if-else still works with sequential[[
+	init true -> a.b <> c;
+]] parse succeeds
+
+test if-else still works with alternative [[
+	init true -> a+b <> c;
+]] parse succeeds
+
+test if-else still works with parallel [[
+	init true -> a||b <> c;
+]] parse succeeds
+
+test if-else still works with at [[
+	init true -> a@1 <> c;
+]] parse to [[init true->(a@1)<>c;]]
+
+test if-else still works with synchronization [[
+	init true -> a|b <> c;
+]] parse succeeds

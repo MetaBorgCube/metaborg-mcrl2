@@ -1,0 +1,241 @@
+module binary-operators
+language mcrl2
+start symbol MCRL2Spec
+
+fixture [[
+	init delta;
+	map get : Int;
+	eqn get = [[...]];
+]]
+
+test implication [[
+	(m > 1) => x < 3
+]] parse succeeds
+
+test implication not separated [[
+	(m>1) = > x<3
+]] parse fails
+
+test conjunction [[
+	false || x > 4
+]] parse succeeds
+
+test conjunction not separated [[
+	false | | true
+]] parse fails
+
+test disjunction [[
+	true && false
+]] parse succeeds
+
+test disjunction not separated [[
+	true & & false
+]] parse fails
+
+test equality [[
+	4 == 5
+]] parse succeeds
+
+test equality not separated [[
+	4 = = 5
+]] parse fails
+
+test inequality [[
+	4 != 5
+]] parse succeeds
+
+test inequality not separated [[
+	4 ! = 5
+]] parse fails
+
+test smaller [[
+	(x + 3) < 5
+]] parse succeeds
+
+test smaller equal [[
+	4 <= 5
+]] parse succeeds
+
+test smaller equal not separated [[
+	4 < = 5
+]] parse fails
+
+test larger [[
+	4 > 5
+]] parse succeeds
+
+test larger equal [[
+	4 >= 5
+]] parse succeeds
+
+test larger equal not separated [[
+	4 > = 5
+]] parse fails
+
+test in list [[
+	4 in [1,2,3]
+]] parse succeeds
+
+test in set [[
+	4 in {1,2,3,4}
+]] parse succeeds
+
+test in bag [[
+	4 in {3:1, 4:0, 6:2}
+]] parse succeeds
+
+test in empty bag [[
+	4 in {:}
+]] parse succeeds
+
+test in empty list [[
+	4 in []
+]] parse succeeds
+
+test in empty set [[
+	4 in {}
+]] parse succeeds
+
+test in, layout not required after 'in' (test with square bracket) [[
+	4 in[1,2]
+]] parse succeeds
+
+test in, layout not required before in if it's a number [[
+	4in[]
+]] parse succeeds
+
+test in, layout required before in (test with letter) [[
+	xin[]
+]] parse fails
+
+test in, layout required before in (test with underscore) [[
+	x_in[]
+]] parse fails
+
+test in, layout required before in (test with prime) [[
+	x'in[]
+]] parse fails
+
+test in, layout required after in (test with underscore) [[
+	1 in_x
+]] parse fails
+
+test in, layout required after in (test with Capital) [[
+	1 inX
+]] parse fails
+
+test list constructor [[
+	x |> [1,2,3]
+]] parse succeeds
+
+test list constructor not separated [[
+	x | > [1,2,3]
+]] parse fails
+
+test reverse list constructor [[
+	[] <| x
+]] parse succeeds
+
+test reverse list constructor not separated [[
+	[] < | x
+]] parse fails
+
+test list concatenation [[
+	[1] ++ []
+]] parse succeeds
+
+test set union [[
+	{} + {1,2,3}
+]] parse succeeds
+
+test bag union [[
+	{1:0} + {:}
+]] parse succeeds
+
+test addition [[
+	1+2
+]] parse succeeds
+
+test set difference [[
+	{2,6} - {}
+]] parse succeeds
+
+test bag difference [[
+	{2:1, 6:2} - {6:1}
+]] parse succeeds
+
+test subtraction [[
+	5 - 4
+]] parse succeeds
+
+test division [[
+	5/4
+]] parse succeeds
+
+test integer division [[
+	5 div 4
+]] parse succeeds
+
+test integer division does not require layout before if it's a number [[
+	5div 4
+]] parse succeeds
+
+test integer division requires layout before (test with prime) [[
+	x'div 4
+]] parse fails
+
+test integer division requires layout before (test with underscore) [[
+	x_div 4
+]] parse fails
+
+test integer division requires layout after [[
+	5 div4
+]] parse fails
+
+test integer modulo [[
+	-21 mod 4
+]] parse succeeds
+
+test integer modulo does not require layout before if it's a number [[
+	5mod 4
+]] parse succeeds
+
+test integer modulo requires layout before (test with prime) [[
+	x'mod 4
+]] parse fails
+
+test integer modulo requires layout before (test with underscore) [[
+	x_mod 4
+]] parse fails
+
+test integer modulo requires layout after [[
+	5 mod4
+]] parse fails
+
+test set intersection [[
+	{1} * {1,2,3}
+]] parse succeeds
+
+test intersection no layout required (test with set) [[
+	{}*{}
+]] parse succeeds
+
+test intersection no layout required (test with letter and underscore) [[
+	x*_y
+]] parse succeeds
+
+test intersection no layout required (test with capital and prime) [[
+	x'*Y
+]] parse succeeds
+
+test bag intersection [[
+	{1:1} * {:}
+]] parse succeeds
+
+test multiplication [[
+	4 * 5
+]] parse succeeds
+
+test list index [[
+	[1,2,3] .0
+]] parse succeeds

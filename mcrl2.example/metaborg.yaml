@@ -1,8 +1,8 @@
 ---
 id: org.metaborg:mcrl2.example:0.1.0-SNAPSHOT
-name: mCRL2Example
+name: mcrl2example
 dependencies:
   compile:
-  - org.metaborg:mcrl2.syntax:0.1.0-SNAPSHOT
+  - org.metaborg:mcrl2:0.1.0-SNAPSHOT
 build:
   useBuildSystemSpec: true

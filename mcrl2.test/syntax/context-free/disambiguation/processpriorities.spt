@@ -1,0 +1,77 @@
+module processpriorities
+language mcrl2
+start symbol MCRL2Spec
+
+test sum binds stronger than alternative [[
+	init sum x:Int . p(x) + p(9);
+]] parse to [[init (sum x:Int . p(x) ) + p(9) ;]]
+
+test parallel binds stronger than sum [[
+	init sum x:Int.p(x) || tau;
+]] parse to [[init sum x:Int. (p(x)||tau) ;]]
+
+test if binds stronger than parallel [[
+	init false -> a || b;
+]] parse to [[init (false -> a) || b ;]]
+
+test if then else binds stronger than parallel [[
+	init true -> a <> b || c;
+]] parse to [[init (true -> a <> b) || c ;]]
+
+test if-then is preferred on the outside (left) [[
+	% normal if-then
+	init true -> % then starts here
+		% new if-then-else
+		true -> tau 
+			<> %else starts here
+			tau;
+]] parse to [[
+	init true ->
+		(
+			true -> tau <> tau
+		);
+]]
+
+test if-then is preferred on the outside (right) [[
+	init false -> tau <> true -> delta;
+]] parse to [[init false -> tau <> (true -> delta);]]
+
+test if-then is preferred on the outside (right) (Wrong amb node placement) [[
+	init true -> false -> delta <> true->p <> tau;
+]] parse to [[init true -> (false -> delta <> (true->p <> tau)) ;]]
+
+test sequential binds stronger than if [[
+	init false -> a . b;
+]] parse to [[init false -> (a.b);]]
+
+test sequential binds stronger than if (reversed) [[
+	init a . true -> b;
+]] parse to [[init a . (true->b) ;]]
+
+test At binds stronger than sequential [[
+	init a.b@1;
+]] parse to [[init a.(b@1);]]
+
+test sequential binds stronger than parallel [[
+	init a.b||c;
+]] parse to [[init (a.b)||c;]]
+
+test sequential binds stronger than parallel (reversed) [[
+	init a.(b||c);
+]] parse succeeds
+
+test sync binds stronger than @ [[
+	init a|b@1;
+]] parse to [[init (a|b)@1;]]
+
+test prefer proc alt over data conj in at [[
+  init a @ b || c;
+]] parse to [[init (a @ b) || c;]]
+
+test prefer proc choice over data add in at [[
+  init a @ b + c;
+]] parse to [[init (a @ b) + c;]]
+
+test pefer proc seq over data elt-at in at [[
+  init a @ b . c;
+]] parse to [[init (a @ b) . c;]]

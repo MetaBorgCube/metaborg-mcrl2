@@ -1,0 +1,30 @@
+module mcrl2/syntax/pp
+
+imports
+
+  libstratego-gpp
+  libspoofax/sdf/pp
+  libspoofax/editor/refactoring/-
+  pp/mcrl2-parenthesize
+  pp/mcrl2-pp
+
+rules
+
+  pp-mcrl2-string =
+    pp-partial-mcrl2-string(prettyprint-mcrl2-start-symbols)
+
+  pp-partial-mcrl2-string =
+    pp-partial-mcrl2-string(prettyprint-mcrl2)
+
+  pp-partial-mcrl2-string(|sort) =
+    pp-partial-mcrl2-string(prettyprint-mcrl2(|sort))
+
+  pp-partial-mcrl2-strings =
+    pp-partial-mcrl2-string(pp-H-list(prettyprint-mcrl2|", "))
+
+  pp-partial-mcrl2-string(pp) =
+    parenthesize-mcrl2
+  ; pp
+  ; !V([], <id>)
+  ; box2text-string(|120)
+
