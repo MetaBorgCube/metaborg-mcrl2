@@ -2,8 +2,9 @@ module mcrl2
 
 imports
 
+  Layout
   mcrl2/Spec
 
 context-free start-symbols
 
-  MCRL2Spec
+  MCRL2-Spec

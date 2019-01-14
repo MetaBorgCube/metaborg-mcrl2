@@ -8,7 +8,7 @@ imports
 language
 
   table         : target/metaborg/sdf.tbl
-  start symbols : MCRL2Spec
+  start symbols : MCRL2-Spec
 
   line comment  : "%"
   fences        : [ ] ( ) { }

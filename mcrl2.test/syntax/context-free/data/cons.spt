@@ -1,6 +1,6 @@
-module cons
+module syntax/context-free/data/cons
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 fixture [[
 	init delta;

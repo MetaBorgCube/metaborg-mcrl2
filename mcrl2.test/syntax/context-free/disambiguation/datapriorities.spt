@@ -1,6 +1,6 @@
-module datapriorities
+module syntax/context-free/disambiguation/datapriorities
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 // I only care about getting the priorities and association right,
 // not about the semantics!

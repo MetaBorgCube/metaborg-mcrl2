@@ -1,4 +1,4 @@
-module general
+module syntax/general
 language mcrl2
 
 test init requires layout [[

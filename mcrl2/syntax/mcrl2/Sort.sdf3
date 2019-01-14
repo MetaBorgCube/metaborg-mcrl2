@@ -10,53 +10,53 @@ template options
 
 context-free syntax //--- Sort expressions and sort declarations
 
-  SortExpr.Bool     = <Bool>
-  SortExpr.Pos      = <Pos>
-  SortExpr.Nat      = <Nat>
-  SortExpr.Int      = <Int>
-  SortExpr.Real     = <Real>
+  MCRL2-SortExpr.Bool     = <Bool>
+  MCRL2-SortExpr.Pos      = <Pos>
+  MCRL2-SortExpr.Nat      = <Nat>
+  MCRL2-SortExpr.Int      = <Int>
+  MCRL2-SortExpr.Real     = <Real>
   syntax
-  SortExpr-CF.List  = "List" "(" LAYOUT?-CF SortExpr-CF LAYOUT?-CF ")"
-  SortExpr-CF.Set   = "Set" "(" LAYOUT?-CF SortExpr-CF LAYOUT?-CF ")"
-  SortExpr-CF.Bag   = "Bag" "(" LAYOUT?-CF SortExpr-CF LAYOUT?-CF ")"
+  MCRL2-SortExpr-CF.List  = "List" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
+  MCRL2-SortExpr-CF.Set   = "Set" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
+  MCRL2-SortExpr-CF.Bag   = "Bag" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
   context-free syntax
-  SortExpr.SortRef  = ID
-  SortExpr          = <(<SortExpr>)> {bracket}
-  SortExpr.Struct   = <struct <{ConstrDecl " | "}+>>
-  SortExpr.Function = [[SortExpr] -> [SortExpr]] {right}
-  SortExpr.Product  = Product
-  Product = <<SortExpr> # <{SortExpr " # "}+>>
+  MCRL2-SortExpr.SortRef  = MCRL2-ID
+  MCRL2-SortExpr          = <(<MCRL2-SortExpr>)> {bracket}
+  MCRL2-SortExpr.Struct   = <struct <{MCRL2-ConstrDecl " | "}+>>
+  MCRL2-SortExpr.Function = [[MCRL2-SortExpr] -> [MCRL2-SortExpr]] {right}
+  MCRL2-SortExpr.Product  = MCRL2-Product
+  MCRL2-Product = <<MCRL2-SortExpr> # <{MCRL2-SortExpr " # "}+>>
 
-  SortProduct = SortExpr
+  MCRL2-SortProduct = MCRL2-SortExpr
 
-  SortSpec.SortSpec = <sort <{SortDecl " "}+>>
+  MCRL2-SortSpec.SortSpec = <sort <{MCRL2-SortDecl " "}+>>
 
-  SortDecl.SortDecl  = <<{ID ", "}+>;>
-  SortDecl.SortAlias = <<ID> = <SortExpr>;>
+  MCRL2-SortDecl.SortDecl  = <<{MCRL2-ID ", "}+>;>
+  MCRL2-SortDecl.SortAlias = <<MCRL2-ID> = <MCRL2-SortExpr>;>
 
-  ConstrDecl.ConstrDecl = <<ID><ConstrDecl-Projs?><ConstrDecl-Recog?>>
-  ConstrDecl-Projs       = <(<{ProjDecl ", "}+>)>
-  ConstrDecl-Recog.Recog = <?<ID>>
+  MCRL2-ConstrDecl.ConstrDecl = <<MCRL2-ID><MCRL2-ConstrDecl-Projs?><MCRL2-ConstrDecl-Recog?>>
+  MCRL2-ConstrDecl-Projs       = <(<{MCRL2-ProjDecl ", "}+>)>
+  MCRL2-ConstrDecl-Recog.Recog = <?<MCRL2-ID>>
 
-  ProjDecl.ProjDecl = <<ProjDecl-Id?><SortExpr>>
-  ProjDecl-Id = <<ID> : >
+  MCRL2-ProjDecl.ProjDecl = <<MCRL2-ProjDecl-Id?><MCRL2-SortExpr>>
+  MCRL2-ProjDecl-Id = <<MCRL2-ID> : >
 
 context-free syntax //--- Constructors and mappings
 
-  IdsDecl.IdsDecl = <<{ID ", "}+> : <SortExpr>>
+  MCRL2-IdsDecl.IdsDecl = <<{MCRL2-ID ", "}+> : <MCRL2-SortExpr>>
   
-  ConsSpec.ConsSpec = <cons <ConsSpec-Decl+>>
-  ConsSpec-Decl = <<IdsDecl>;>
+  MCRL2-ConsSpec.ConsSpec = <cons <MCRL2-ConsSpec-Decl+>>
+  MCRL2-ConsSpec-Decl = <<MCRL2-IdsDecl>;>
 
-  MapSpec.MapSpec = <map <MapSpec-Decl+>>
-  MapSpec-Decl = <<IdsDecl>;>
+  MCRL2-MapSpec.MapSpec = <map <MCRL2-MapSpec-Decl+>>
+  MCRL2-MapSpec-Decl = <<MCRL2-IdsDecl>;>
 
 context-free priorities
 
   /* 1 */ { left:
-    SortExpr.Product
+    MCRL2-SortExpr.Product
   }
   >
   /* 0 */ { right:
-    SortExpr.Function
+    MCRL2-SortExpr.Function
   }

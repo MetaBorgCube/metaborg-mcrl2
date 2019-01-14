@@ -1,6 +1,6 @@
-module sort-simple
+module syntax/context-free/data/sort-simple
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 // test simple sort declarations
 

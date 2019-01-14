@@ -1,6 +1,6 @@
-module var
+module syntax/context-free/data/var
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 fixture [[
 	init delta;

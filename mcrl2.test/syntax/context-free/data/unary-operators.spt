@@ -1,6 +1,6 @@
-module unary-operators
+module syntax/context-free/data/unary-operators
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 // not concerned with type errors or missing map or var declarations
 fixture [[

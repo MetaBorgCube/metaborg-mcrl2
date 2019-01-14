@@ -12,7 +12,7 @@ exports:
 - language: Stratego-Sugar
   directory: trans
   includes:
-  - "mcrl2/syntax/**/*.str"
+  - "mcrl2/**/*.str"
   ## SDF3
 - language: TemplateLang
   directory: syntax
@@ -22,6 +22,17 @@ exports:
   directory: src-gen/syntax
   includes:
   - "**/*.aterm"
+- language: Stratego-Sugar
+  directory: src-gen
+  includes:
+  - "completion/mcrl2/**/*.str"
+  - "pp/mcrl2/**/*.str"
+  - "pp/mcrl2-parenthesize.str"
+  - "signatures/mcrl2/**/*.str"
+- language: EditorService
+  directory: src-gen
+  includes:
+  - "completion/colorer/mcrl2/**/*.esv"
 language:
   sdf:
     sdf2table: java

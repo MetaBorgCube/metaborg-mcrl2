@@ -1,6 +1,6 @@
-module ids
+module syntax/lexical/ids
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 // test IDs
 

@@ -1,7 +1,7 @@
-module if
+module syntax/context-free/disambiguation/if
 
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 test if & sequential (sequential first) [[
 	init a . true -> b;

@@ -1,6 +1,6 @@
-module processdataconflicts
+module syntax/context-free/disambiguation/processdataconflicts
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 test if-then and conj [[
   init a || b -> p;

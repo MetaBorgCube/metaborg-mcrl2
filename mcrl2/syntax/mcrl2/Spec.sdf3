@@ -17,34 +17,34 @@ template options
 
 context-free start-symbols
 
-  MCRL2Spec
+  MCRL2-Spec
 
 context-free syntax //--- mCRL2 specification
 
-  MCRL2Spec.MCRL2Spec = <
-    <{MCRL2SpecElt "\n"}*>
-    <Init>
-    <{MCRL2SpecElt "\n"}*>
+  MCRL2-Spec.MCRL2Spec = <
+    <{MCRL2-SpecElt "\n"}*>
+    <MCRL2-Init>
+    <{MCRL2-SpecElt "\n"}*>
   >
 
-  MCRL2SpecElt = SortSpec
-  MCRL2SpecElt = ConsSpec
-  MCRL2SpecElt = MapSpec
-  MCRL2SpecElt = EqnSpec
-  MCRL2SpecElt = GlobVarSpec
-  MCRL2SpecElt = ActSpec
-  MCRL2SpecElt = ProcSpec
+  MCRL2-SpecElt = MCRL2-SortSpec
+  MCRL2-SpecElt = MCRL2-ConsSpec
+  MCRL2-SpecElt = MCRL2-MapSpec
+  MCRL2-SpecElt = MCRL2-EqnSpec
+  MCRL2-SpecElt = MCRL2-GlobVarSpec
+  MCRL2-SpecElt = MCRL2-ActSpec
+  MCRL2-SpecElt = MCRL2-ProcSpec
 
 context-free priorities //--- Data and process conflicts
 
-  ProcExpr.IfThen <0> .> DataExpr.Conj,
-  ProcExpr.IfThen <0> .> DataExpr.Add_SetBagUnion,
-  ProcExpr.IfThen <0> .> DataExpr.EltAt,
+  MCRL2-ProcExpr.IfThen <0> .> MCRL2-DataExpr.Conj,
+  MCRL2-ProcExpr.IfThen <0> .> MCRL2-DataExpr.Add_SetBagUnion,
+  MCRL2-ProcExpr.IfThen <0> .> MCRL2-DataExpr.EltAt,
 
-  ProcExpr.IfThenElse <0> .> DataExpr.Conj,
-  ProcExpr.IfThenElse <0> .> DataExpr.Add_SetBagUnion,
-  ProcExpr.IfThenElse <0> .> DataExpr.EltAt,
+  MCRL2-ProcExpr.IfThenElse <0> .> MCRL2-DataExpr.Conj,
+  MCRL2-ProcExpr.IfThenElse <0> .> MCRL2-DataExpr.Add_SetBagUnion,
+  MCRL2-ProcExpr.IfThenElse <0> .> MCRL2-DataExpr.EltAt,
 
-  ProcExpr.At <1> .> DataExpr.Conj,
-  ProcExpr.At <1> .> DataExpr.Add_SetBagUnion,
-  ProcExpr.At <1> .> DataExpr.EltAt
+  MCRL2-ProcExpr.At <1> .> MCRL2-DataExpr.Conj,
+  MCRL2-ProcExpr.At <1> .> MCRL2-DataExpr.Add_SetBagUnion,
+  MCRL2-ProcExpr.At <1> .> MCRL2-DataExpr.EltAt

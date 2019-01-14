@@ -1,6 +1,6 @@
-module processpriorities
+module syntax/context-free/disambiguation/processpriorities
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 test sum binds stronger than alternative [[
 	init sum x:Int . p(x) + p(9);

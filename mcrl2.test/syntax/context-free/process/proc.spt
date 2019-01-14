@@ -1,6 +1,6 @@
-module proc
+module syntax/context-free/process/proc
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 test no empty proc allowed (with ;) [[
 	init delta;

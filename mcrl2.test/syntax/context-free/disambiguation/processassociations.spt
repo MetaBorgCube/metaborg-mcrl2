@@ -1,6 +1,6 @@
-module processassociations
+module syntax/context-free/disambiguation/processassociations
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 test no if-then in if-then-else [[
 	init true -> true -> delta <> tau;

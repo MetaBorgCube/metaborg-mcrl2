@@ -1,6 +1,6 @@
-module sort
+module syntax/context-free/data/sort
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 fixture [[
 	init delta;

@@ -1,6 +1,6 @@
-module proc-expressions
+module syntax/context-free/process/proc-expressions
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 fixture [[
 	init p;

@@ -1,6 +1,6 @@
-module act
+module syntax/context-free/process/act
 language mcrl2
-start symbol MCRL2Spec
+start symbol MCRL2-Spec
 
 fixture [[
 	init delta;

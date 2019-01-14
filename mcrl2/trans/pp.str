@@ -3,14 +3,13 @@ module pp
 imports
 
   libstratego-gpp
-  libspoofax/sdf/pp
   libspoofax/editor/refactoring/-
-  mcrl2/syntax/pp
+  mcrl2/pp
 
 rules
 
   editor-format:
-    (node, _, ast, path, project-path) -> (filename, result)
+    (node, _, _, path, project-path) -> (filename, result)
     with
       ext      := <get-extension> path
     ; filename := <guarantee-extension(|$[pp.[ext]])> path

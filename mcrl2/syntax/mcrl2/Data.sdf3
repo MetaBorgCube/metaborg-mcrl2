@@ -12,129 +12,129 @@ template options
 
 context-free syntax //--- Data expressions
 
-  VarDecl.VarDecl = <<ID> : <SortExpr>>
+  MCRL2-VarDecl.VarDecl = <<MCRL2-ID> : <MCRL2-SortExpr>>
 
-  VarsDecl.VarsDecl = <<{ID ", "}+> : <SortExpr>>
+  MCRL2-VarsDecl.VarsDecl = <<{MCRL2-ID ", "}+> : <MCRL2-SortExpr>>
 
-  DataExpr.DataRef         = <<ID>>
-  DataExpr.Number          = <<NUM>>
-  DataExpr.True            = <true>
-  DataExpr.False           = <false>
-  DataExpr.EmptyList       = <[ ]>
-  DataExpr.EmptySet        = <{ }>
-  DataExpr.EmptyBag        = <{ : }>
-  DataExpr.ListEnum        = <[<{DataExpr ", "}+>]>
-  DataExpr.BagEnum         = <{<{BagEnumElt ", "}+>}>
-  DataExpr.SetBagComp      = <{ <VarDecl> | <DataExpr>  }>
-  DataExpr.SetEnum         = <{<{DataExpr ", "}+>}>
-  DataExpr                 = <(<DataExpr>)> {bracket}
-  DataExpr.FunUpdate       = [[DataExpr]\[[DataExpr] -> [DataExpr]\]] {left}
-  DataExpr.FunApp          = <<DataExpr>(<{DataExpr ","}+>)> {left}
-  DataExpr.Neg_SetCompl    = <!<DataExpr>>
-  DataExpr.UnaryMinus      = <-<DataExpr>>
-  DataExpr.ListSize        = <#<DataExpr>>
-  DataExpr.ForAll          = <forall <{VarsDecl ", "}+> . <DataExpr>> {right, longest-match}
-  DataExpr.Exists          = <exists <{VarsDecl ", "}+> . <DataExpr>> {right, longest-match}
-  DataExpr.Lambda          = <lambda <{VarsDecl ", "}+> . <DataExpr>> {right, longest-match}
-  DataExpr.Impl            = [[DataExpr] => [DataExpr]] {right}
-  DataExpr.Conj            = <<DataExpr> || <DataExpr>> {right}
-  DataExpr.Disj            = <<DataExpr> && <DataExpr>> {right}
-  DataExpr.Equal           = <<DataExpr> == <DataExpr>> {left}
-  DataExpr.Inequal         = <<DataExpr> != <DataExpr>> {left}
-  DataExpr.Smaller         = [[DataExpr] < [DataExpr]] {left}
-  DataExpr.SmallerOrEqual  = [[DataExpr] <= [DataExpr]] {left}
-  DataExpr.LargerOrEqual   = [[DataExpr] >= [DataExpr]] {left}
-  DataExpr.Larger          = [[DataExpr] > [DataExpr]] {left}
-  DataExpr.Member          = <<DataExpr> in <DataExpr>> {left}
-  DataExpr.ListCons        = [[DataExpr] |> [DataExpr]] {right}
-  DataExpr.ListSnoc        = [[DataExpr] <| [DataExpr]] {left}
-  DataExpr.ListConc        = <<DataExpr> ++ <DataExpr>> {left}
-  DataExpr.Add_SetBagUnion = <<DataExpr> + <DataExpr>> {left}
-  DataExpr.Sub_SetBagDiff  = <<DataExpr> - <DataExpr>> {left}
-  DataExpr.Div             = <<DataExpr> / <DataExpr>> {left}
-  DataExpr.IntDiv          = <<DataExpr> div <DataExpr>> {left}
-  DataExpr.IntMod          = <<DataExpr> mod <DataExpr>> {left}
-  DataExpr.Mul_SetBagIsect = <<DataExpr> * <DataExpr>> {left}
-  DataExpr.EltAt           = <<DataExpr> . <DataExpr>> {left}
-  DataExpr.Where           = <<DataExpr> whr <{Assignment ", "}+> end> {left}
-  DataExpr.As              = <<DataExpr> : <SortExpr>> /* extension */
+  MCRL2-DataExpr.DataRef         = <<MCRL2-ID>>
+  MCRL2-DataExpr.Number          = <<MCRL2-NUM>>
+  MCRL2-DataExpr.True            = <true>
+  MCRL2-DataExpr.False           = <false>
+  MCRL2-DataExpr.EmptyList       = <[ ]>
+  MCRL2-DataExpr.EmptySet        = <{ }>
+  MCRL2-DataExpr.EmptyBag        = <{ : }>
+  MCRL2-DataExpr.ListEnum        = <[<{MCRL2-DataExpr ", "}+>]>
+  MCRL2-DataExpr.BagEnum         = <{<{MCRL2-BagEnumElt ", "}+>}>
+  MCRL2-DataExpr.SetBagComp      = <{ <MCRL2-VarDecl> | <MCRL2-DataExpr>  }>
+  MCRL2-DataExpr.SetEnum         = <{<{MCRL2-DataExpr ", "}+>}>
+  MCRL2-DataExpr                 = <(<MCRL2-DataExpr>)> {bracket}
+  MCRL2-DataExpr.FunUpdate       = [[MCRL2-DataExpr]\[[MCRL2-DataExpr] -> [MCRL2-DataExpr]\]] {left}
+  MCRL2-DataExpr.FunApp          = <<MCRL2-DataExpr>(<{MCRL2-DataExpr ","}+>)> {left}
+  MCRL2-DataExpr.Neg_SetCompl    = <!<MCRL2-DataExpr>>
+  MCRL2-DataExpr.UnaryMinus      = <-<MCRL2-DataExpr>>
+  MCRL2-DataExpr.ListSize        = <#<MCRL2-DataExpr>>
+  MCRL2-DataExpr.ForAll          = <forall <{MCRL2-VarsDecl ", "}+> . <MCRL2-DataExpr>> {right, longest-match}
+  MCRL2-DataExpr.Exists          = <exists <{MCRL2-VarsDecl ", "}+> . <MCRL2-DataExpr>> {right, longest-match}
+  MCRL2-DataExpr.Lambda          = <lambda <{MCRL2-VarsDecl ", "}+> . <MCRL2-DataExpr>> {right, longest-match}
+  MCRL2-DataExpr.Impl            = [[MCRL2-DataExpr] => [MCRL2-DataExpr]] {right}
+  MCRL2-DataExpr.Conj            = <<MCRL2-DataExpr> || <MCRL2-DataExpr>> {right}
+  MCRL2-DataExpr.Disj            = <<MCRL2-DataExpr> && <MCRL2-DataExpr>> {right}
+  MCRL2-DataExpr.Equal           = <<MCRL2-DataExpr> == <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Inequal         = <<MCRL2-DataExpr> != <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Smaller         = [[MCRL2-DataExpr] < [MCRL2-DataExpr]] {left}
+  MCRL2-DataExpr.SmallerOrEqual  = [[MCRL2-DataExpr] <= [MCRL2-DataExpr]] {left}
+  MCRL2-DataExpr.LargerOrEqual   = [[MCRL2-DataExpr] >= [MCRL2-DataExpr]] {left}
+  MCRL2-DataExpr.Larger          = [[MCRL2-DataExpr] > [MCRL2-DataExpr]] {left}
+  MCRL2-DataExpr.Member          = <<MCRL2-DataExpr> in <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.ListCons        = [[MCRL2-DataExpr] |> [MCRL2-DataExpr]] {right}
+  MCRL2-DataExpr.ListSnoc        = [[MCRL2-DataExpr] <| [MCRL2-DataExpr]] {left}
+  MCRL2-DataExpr.ListConc        = <<MCRL2-DataExpr> ++ <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Add_SetBagUnion = <<MCRL2-DataExpr> + <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Sub_SetBagDiff  = <<MCRL2-DataExpr> - <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Div             = <<MCRL2-DataExpr> / <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.IntDiv          = <<MCRL2-DataExpr> div <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.IntMod          = <<MCRL2-DataExpr> mod <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Mul_SetBagIsect = <<MCRL2-DataExpr> * <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.EltAt           = <<MCRL2-DataExpr> . <MCRL2-DataExpr>> {left}
+  MCRL2-DataExpr.Where           = <<MCRL2-DataExpr> whr <{MCRL2-Assignment ", "}+> end> {left}
+  MCRL2-DataExpr.As              = <<MCRL2-DataExpr> : <MCRL2-SortExpr>> /* extension */
 
-  Assignment.Assign = <<ID> = <DataExpr>>
+  MCRL2-Assignment.Assign = <<MCRL2-ID> = <MCRL2-DataExpr>>
 
-  BagEnumElt.BagEnumElt = <<DataExpr> : <DataExpr>>
+  MCRL2-BagEnumElt.BagEnumElt = <<MCRL2-DataExpr> : <MCRL2-DataExpr>>
 
 context-free priorities
 
   /* 13 */ { left:
-    DataExpr.FunUpdate
-    DataExpr.FunApp
+    MCRL2-DataExpr.FunUpdate
+    MCRL2-DataExpr.FunApp
   }
   >
   /* 12 (unary) */ {
-    DataExpr.Neg_SetCompl
-    DataExpr.UnaryMinus
-    DataExpr.ListSize
+    MCRL2-DataExpr.Neg_SetCompl
+    MCRL2-DataExpr.UnaryMinus
+    MCRL2-DataExpr.ListSize
   }
   >
   /* 12 (binary) */ { left:
-    DataExpr.Mul_SetBagIsect
-    DataExpr.EltAt
+    MCRL2-DataExpr.Mul_SetBagIsect
+    MCRL2-DataExpr.EltAt
   }
   >
   /* 11 */ { left:
-    DataExpr.Div
-    DataExpr.IntDiv
-    DataExpr.IntMod
+    MCRL2-DataExpr.Div
+    MCRL2-DataExpr.IntDiv
+    MCRL2-DataExpr.IntMod
   }
   >
   /* 10 */ { left:
-    DataExpr.Add_SetBagUnion
-    DataExpr.Sub_SetBagDiff
+    MCRL2-DataExpr.Add_SetBagUnion
+    MCRL2-DataExpr.Sub_SetBagDiff
   }
   >
   /* 9 */ { left:
-    DataExpr.ListConc
+    MCRL2-DataExpr.ListConc
   }
   >
   /* 8 */ { left:
-    DataExpr.ListSnoc
+    MCRL2-DataExpr.ListSnoc
   }
   >
   /* 7 */ { right:
-    DataExpr.ListCons
+    MCRL2-DataExpr.ListCons
   }
   >
   /* 6 */ { left:
-    DataExpr.Smaller
-    DataExpr.SmallerOrEqual
-    DataExpr.LargerOrEqual
-    DataExpr.Larger
-    DataExpr.Member
+    MCRL2-DataExpr.Smaller
+    MCRL2-DataExpr.SmallerOrEqual
+    MCRL2-DataExpr.LargerOrEqual
+    MCRL2-DataExpr.Larger
+    MCRL2-DataExpr.Member
   }
   >
   /* 5 */ { left:
-    DataExpr.Equal
-    DataExpr.Inequal
+    MCRL2-DataExpr.Equal
+    MCRL2-DataExpr.Inequal
   }
   >
   /* 4 */ { right:
-    DataExpr.Disj
+    MCRL2-DataExpr.Disj
   }
   >
   /* 3 */ { right:
-    DataExpr.Conj
+    MCRL2-DataExpr.Conj
   }
   >
   /* 2 */ { right:
-    DataExpr.Impl
+    MCRL2-DataExpr.Impl
   }
   >
   /* 1 */ { right:
-    DataExpr.ForAll
-    DataExpr.Exists
-    DataExpr.Lambda
+    MCRL2-DataExpr.ForAll
+    MCRL2-DataExpr.Exists
+    MCRL2-DataExpr.Lambda
   }
   >
   /* 0 */ { left:
-    DataExpr.Where
+    MCRL2-DataExpr.Where
   }
