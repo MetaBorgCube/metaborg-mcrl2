@@ -37,8 +37,8 @@ context-free syntax //--- Data expressions
   MCRL2-DataExpr.Exists          = <exists <{MCRL2-VarsDecl ", "}+> . <MCRL2-DataExpr>> {right, longest-match}
   MCRL2-DataExpr.Lambda          = <lambda <{MCRL2-VarsDecl ", "}+> . <MCRL2-DataExpr>> {right, longest-match}
   MCRL2-DataExpr.Impl            = [[MCRL2-DataExpr] => [MCRL2-DataExpr]] {right}
-  MCRL2-DataExpr.Conj            = <<MCRL2-DataExpr> || <MCRL2-DataExpr>> {right}
-  MCRL2-DataExpr.Disj            = <<MCRL2-DataExpr> && <MCRL2-DataExpr>> {right}
+  MCRL2-DataExpr.Disj            = <<MCRL2-DataExpr> || <MCRL2-DataExpr>> {right}
+  MCRL2-DataExpr.Conj            = <<MCRL2-DataExpr> && <MCRL2-DataExpr>> {right}
   MCRL2-DataExpr.Equal           = <<MCRL2-DataExpr> == <MCRL2-DataExpr>> {left}
   MCRL2-DataExpr.Inequal         = <<MCRL2-DataExpr> != <MCRL2-DataExpr>> {left}
   MCRL2-DataExpr.Smaller         = [[MCRL2-DataExpr] < [MCRL2-DataExpr]] {left}
