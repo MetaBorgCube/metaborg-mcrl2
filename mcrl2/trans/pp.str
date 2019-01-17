@@ -4,7 +4,7 @@ imports
 
   libstratego-gpp
   libspoofax/editor/refactoring/-
-  mcrl2/pp
+  mcrl2/syntax/pp
 
 rules
 
