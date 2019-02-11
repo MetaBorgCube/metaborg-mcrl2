@@ -24,8 +24,7 @@ context-free syntax //--- Sort expressions and sort declarations
   MCRL2-SortExpr          = <(<MCRL2-SortExpr>)> {bracket}
   MCRL2-SortExpr.Struct   = <struct <{MCRL2-ConstrDecl " | "}+>>
   MCRL2-SortExpr.Function = [[MCRL2-SortExpr] -> [MCRL2-SortExpr]] {right}
-  MCRL2-SortExpr.Product  = MCRL2-Product
-  MCRL2-Product = <<MCRL2-SortExpr> # <{MCRL2-SortExpr " # "}+>>
+  MCRL2-SortExpr.Product  = <<MCRL2-SortExpr> # <{MCRL2-SortExpr " # "}+>>
 
   MCRL2-SortProduct = MCRL2-SortExpr
 
