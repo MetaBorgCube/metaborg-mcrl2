@@ -6,6 +6,7 @@ imports
   libspoofax/sdf/pp
   pp/mcrl2/-
   pp/mcrl2-parenthesize
+  mcrl2/syntax/parenthesize
 
 rules
 

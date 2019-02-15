@@ -1,0 +1,20 @@
+module mcrl2/syntax/parenthesize
+
+imports
+
+  libstratego-gpp
+  libspoofax/sdf/pp
+  signatures/mcrl2/-
+  pp/mcrl2/-
+  pp/mcrl2-parenthesize
+
+rules //--- Sort expressions and sort declarations
+
+  mcrl2Parenthesize :
+    Product((t, ts)) -> Product((Parenthetical(t), ts))
+    where <?Product(_)> t
+
+  mcrl2Parenthesize :
+    Product((t, ts)) -> Product((t, ts'))
+    where [_|_] := <filter(?Product(_))> ts
+        ; ts' := <map(try(?Product(_); !Parenthetical(<id>)))> ts

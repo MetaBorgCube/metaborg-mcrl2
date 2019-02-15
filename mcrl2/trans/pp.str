@@ -9,11 +9,11 @@ imports
 rules
 
   editor-format:
-    (node, _, _, path, project-path) -> (filename, result)
+    (ast, _, _, path, project-path) -> (filename, result)
     with
       ext      := <get-extension> path
     ; filename := <guarantee-extension(|$[pp.[ext]])> path
-    ; result   := <pp-mcrl2-string> node
+    ; result   := <pp-mcrl2-string> ast
 
 rules
   
