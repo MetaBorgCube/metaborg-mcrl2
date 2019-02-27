@@ -58,6 +58,7 @@ context-free syntax //--- Data expressions
   MCRL2-DataExpr.EltAt           = <<MCRL2-DataExpr> . <MCRL2-DataExpr>> {left}
   MCRL2-DataExpr.Where           = <<MCRL2-DataExpr> whr <{MCRL2-Assignment ", "}+> end> {left}
   MCRL2-DataExpr.As              = <<MCRL2-DataExpr> : <MCRL2-SortExpr>> /* extension */
+  MCRL2-DataExpr.Cond            = <if(<MCRL2-DataExpr>, <MCRL2-DataExpr>, <MCRL2-DataExpr>)
 
   MCRL2-Assignment.Assign = <<MCRL2-ID> = <MCRL2-DataExpr>>
 
