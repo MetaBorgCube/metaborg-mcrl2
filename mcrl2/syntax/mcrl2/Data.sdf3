@@ -63,8 +63,18 @@ context-free syntax //--- Data expressions
 
   MCRL2-BagEnumElt.BagEnumElt = <<MCRL2-DataExpr> : <MCRL2-DataExpr>>
 
+lexical syntax
+
+  Keyword = "true" | "false" | "forall" | "exists" | "lambda" | "in" | "div" | "mod" | "whr" | "end"
+
+  ID = Keyword {reject}
+
 context-free priorities
 
+  {
+    MCRL2-DataExpr.As
+  }
+  >
   /* 13 */ { left:
     MCRL2-DataExpr.FunUpdate
     MCRL2-DataExpr.FunApp
