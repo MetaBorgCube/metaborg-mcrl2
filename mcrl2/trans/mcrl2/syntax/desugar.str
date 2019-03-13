@@ -6,35 +6,35 @@ imports
 
 rules
 
-  desugar-all =
+  mcrl2-desugar-all =
     // products must go *before* functions
-    desugar-product-sorts;
-    desugar-function-sorts;
-    desugar-commexprs
+    mcrl2-desugar-product-sorts;
+    mcrl2-desugar-function-sorts;
+    mcrl2-desugar-commexprs
 
-  desugar-product-sorts =
+  mcrl2-desugar-product-sorts =
     bottomup(try(Product(\ (hd, tl) -> [hd|tl] \)))
 
-  desugar-function-sorts =
+  mcrl2-desugar-function-sorts =
     bottomup(try(Function(?Product(<id>) + MkSingleton, id)))
 
-  desugar-commexprs =
+  mcrl2-desugar-commexprs =
     bottomup(try(CommExpr(\ (hd, tl) -> [hd|tl] \, id)))
 
 rules
 
-  resugar-all =
+  mcrl2-resugar-all =
     // functions must go *before* products
-    resugar-function-sorts;
-    resugar-product-sorts;
-    resugar-commexprs
+    mcrl2-resugar-function-sorts;
+    mcrl2-resugar-product-sorts;
+    mcrl2-resugar-commexprs
 
-  resugar-product-sorts =
+  mcrl2-resugar-product-sorts =
     bottomup(try(Product(\ [hd|tl] -> (hd, tl) \)));
     bottomup(try(\ Product([hd]) -> hd \))
 
-  resugar-function-sorts =
+  mcrl2-resugar-function-sorts =
     bottomup(try(Function(?[<id>] + !Product(<id>), id)))
 
-  resugar-commexprs =
+  mcrl2-resugar-commexprs =
     bottomup(try(CommExpr(\ [hd|tl] -> (hd, tl) \, id)))
