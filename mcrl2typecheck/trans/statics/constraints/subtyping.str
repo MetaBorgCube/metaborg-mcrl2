@@ -1,0 +1,341 @@
+module statics/constraints/subtyping
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+  statics/declarative/-
+  statics/constraints/-
+  pp
+
+rules
+
+  init-subtype = tell-subtype(|<init-constraint-store>)
+
+  init-subtypes = tell-subtypes(|<init-constraint-store>)
+
+  merge-subtype: (store, store') -> <merge-constraint-stores(is-var,subtype-decompose,glb-decompose,lub-decompose,pp-partial-mcrl2typecheck-string)>
+
+  merge-subtypes: [] -> <init-constraint-store>
+  merge-subtypes: [C|C*] -> <foldr(!C,merge-subtype)> C*
+
+  tell-subtype(|store) = <tell-subtype> (<id>, store)
+
+  tell-subtype: (TU, store) -> <tell-constraint-store(is-var,subtype-decompose,glb-decompose,lub-decompose,pp-partial-mcrl2typecheck-string|store)> TU
+
+  tell-subtypes(|C): TUs -> <foldr(!C,tell-subtype)> TUs
+
+rules
+
+  pos-vars: FORALL(V*, T) -> <fatal-err(|"Cannot check polarity of type schemes")>
+
+  pos-vars: FUNCTION(T1*, T2) -> <conc> (V1*, V2*)
+    with
+      V1* := <mapconcat(neg-vars)> T1*
+    ; V2* := <pos-vars> T2
+
+  pos-vars: PRODUCT(T*) -> V*
+    with
+      V* := <mapconcat(pos-vars)> T*
+
+  pos-vars: LIST(T) -> V*
+    with
+      V* := <pos-vars> T
+
+  pos-vars: SET(T) -> V*
+    with
+      V* := <pos-vars> T
+
+  pos-vars: BAG(T) -> V*
+    with
+      V* := <pos-vars> T
+
+  pos-vars: V -> [V]
+    where <is-var> V
+
+  pos-vars: T -> []
+
+rules
+
+  neg-vars: FORALL(V*, T) -> <fatal-err(|"Cannot check polarity of type schemes")>
+
+  neg-vars: FUNCTION(T1*, T2) -> <conc> (V1*, V2*)
+    with
+      V1* := <mapconcat(pos-vars)> T1*
+    ; V2* := <neg-vars> T2
+
+  neg-vars: PRODUCT(T*) -> V*
+    with
+      V* := <mapconcat(neg-vars)> T*
+
+  neg-vars: LIST(T) -> V*
+    with
+      V* := <neg-vars> T
+
+  neg-vars: SET(T) -> V*
+    with
+      V* := <neg-vars> T
+
+  neg-vars: BAG(T) -> V*
+    with
+      V* := <neg-vars> T
+
+  neg-vars: V -> []
+    where <is-var> V
+
+  neg-vars: T -> []
+
+rules
+
+  subtype-decompose: (BOOL(), BOOL()) -> []
+
+  subtype-decompose: (T, U) -> []
+    with
+      N* := <number-types>
+    where
+      i := <get-index> (T, N*)
+    ; j := <get-index> (U, N*)
+    ; <leq> (i, j)
+
+  subtype-decompose: (LIST(T), LIST(U)) -> [(T, U)]
+
+  subtype-decompose: (SET(T), SET(U)) -> [(T, U)]
+
+  subtype-decompose: (BAG(T), BAG(U)) -> [(T, U)]
+
+  subtype-decompose: (NAMED(x), NAMED(x)) -> []
+
+  subtype-decompose: (FUNCTION(T1*, T2), FUNCTION(U1*, U2)) -> [(T2, U2)|<zip> (U1*, T1*)]
+
+  subtype-decompose: (PRODUCT(T*), PRODUCT(U*)) -> <zip> (T*, U*)
+
+  subtype-decompose: (BOTTOM(), T) -> []
+
+rules
+
+  // lower bounds are combined with least upper bounds, so results should be positive
+
+  lub-decompose: (BOOL(), BOOL()) -> (BOOL(), [])
+
+  lub-decompose: (T1, T2) -> (T, [])
+    with
+      N* := <number-types>
+    where
+      i := <get-index> (T1, N*)
+    ; j := <get-index> (T2, N*)
+    ; k := <max> (i, j)
+    ; T := <index(|k)> N*
+
+  lub-decompose: (LIST(T1), LIST(T2)) -> (LIST(V), C*)
+    with
+      V := PVAR(<newname> "U")
+    ; C* := [(T1, V), (T2, V)]
+
+  lub-decompose: (SET(T1), SET(T2)) -> (SET(V), C*)
+    with
+      V := PVAR(<newname> "U")
+    ; C* := [(T1, V), (T2, V)]
+
+  lub-decompose: (BAG(T1), BAG(T2)) -> (BAG(V), C*)
+    with
+      V := PVAR(<newname> "U")
+    ; C* := [(T1, V), (T2, V)]
+
+  lub-decompose: (NAMED(x), NAMED(x)) -> (NAMED(x), [])
+
+  lub-decompose: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> (FUNCTION(V1*, V2), C*)
+    where
+      <eq> (<length> T11*, <length> T21*)
+    with
+      V1* := <map(!NVAR(<newname> "V"))> T11*
+    ; V2 := PVAR(<newname> "W")
+    ; C1* := <zip> (V1*, T11*)
+    ; C2* := <zip> (V1*, T21*)
+    ; C* := [(T12, V2), (T22, V2), C1*, C2*]
+
+  lub-decompose: (PRODUCT(T1*), PRODUCT(T2*)) -> (PRODUCT(V*), C*)
+    where
+      <eq> (<length> T1*, <length> T2*)
+    with
+      V* := <map(!PVAR(<newname> "V"))> T1*
+    ; C1* := <zip> (T1*, V*)
+    ; C2* := <zip> (T2*, V*)
+    ; C* := [C1*, C2*]
+
+  lub-decompose: (BOTTOM(), T2) -> (T2, [])
+
+  lub-decompose: (T1, BOTTOM()) -> (T1, [])
+
+rules
+
+  // upper bounds are combined using greatest lower bound, so results should be negative
+
+  glb-decompose: (BOOL(), BOOL()) -> (BOOL(), [])
+
+  glb-decompose: (T1, T2) -> (T, [])
+    with
+      N* := <number-types>
+    where
+      i := <get-index> (T1, N*)
+    ; j := <get-index> (T2, N*)
+    ; k := <min> (i, j)
+    ; T := <index(|k)> N*
+
+  glb-decompose: (LIST(T1), LIST(T2)) -> (LIST(V), C*)
+    with
+      V := NVAR(<newname> "X")
+    ; C* := [(V, T1), (V, T2)]
+
+  glb-decompose: (SET(T1), SET(T2)) -> (SET(V), C*)
+    with
+      V := NVAR(<newname> "X")
+    ; C* := [(V, T1), (V, T2)]
+
+  glb-decompose: (BAG(T1), BAG(T2)) -> (BAG(V), C*)
+    with
+      V := NVAR(<newname> "X")
+    ; C* := [(V, T1), (V, T2)]
+
+  glb-decompose: (NAMED(x), NAMED(x)) -> (NAMED(x), [])
+
+  glb-decompose: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> (FUNCTION(V1*, V2), C*)
+    where
+      <eq> (<length> T11*, <length> T21*)
+    with
+      V1* := <map(!PVAR(<newname> "Y"))> T11*
+    ; V2 := NVAR(<newname> "Z")
+    ; C1* := <zip> (T11*, V1*)
+    ; C2* := <zip> (T21*, V1*)
+    ; C* := [(V2, T12), (V2, T22), C1*, C2*]
+
+  glb-decompose: (PRODUCT(T1*), PRODUCT(T2*)) -> (PRODUCT(V*), C*)
+    where
+      <eq> (<length> T1*, <length> T2*)
+    with
+      V* := <map(!NVAR(<newname> "V"))> T1*
+    ; C1* := <zip> (V*, T1*)
+    ; C2* := <zip> (V*, T2*)
+    ; C* := [C1*, C2*]
+
+  glb-decompose: (BOTTOM(), T2) -> (BOTTOM(), [])
+
+  glb-decompose: (T1, BOTTOM()) -> (BOTTOM(), [])
+
+rules
+
+  tell-subtypes(|C) = <tell-subtypes> (<id>, C)
+
+  tell-subtypes: ((Ts, Us), C) -> <zip;foldr(!C, tell-subtype)> (Ts, Us)
+    where <is-list> Ts; <is-list> Us
+  tell-subtypes: ((T, Us), C) -> <map(\ U -> (T, U) \);foldr(!C, tell-subtype)> Us
+    where <not(is-list)> T; <is-list> Us
+  tell-subtypes: ((Ts, U), C) -> <map(\ T -> (T, U) \);foldr(!C, tell-subtype)> Ts
+    where <is-list> Ts; <not(is-list)> U
+
+rules
+
+  type-polarities(|C): T -> (P*, N*)
+    with
+      P'* := <pos-vars> T
+    ; N'* := <neg-vars> T
+    ; (P*, N*) := <compute-polarities(pos-vars,neg-vars|P'*,N'*)> C
+
+  typing-polarities: DC(_, _, T, C, E) -> (P*, N*)
+    with
+      (P'*, N'*) := <type-polarities(|C)> T
+    ; (P''*, N''*) := <collect-om(typing-polarities);unzip;(concat;make-set,concat;make-set)> E
+    ; P* := <union> (P'*, P''*)
+    ; N* := <union> (N'*, N''*)
+
+rules
+
+  toplevel-gc-typing: D@D(_, _, _, _) -> D
+
+  toplevel-gc-typing: D@DC(_, _, _, C, _) -> DC(ctx', e', T', C', E')
+    with
+      (C', sbs) := <gc-constraint-store(all-vars,polarity,gc-substitute,pp-partial-mcrl2typecheck-string|[])> C
+    ; sbs' := <unify(is-var)> sbs
+    ; DC(ctx', e', T', _, E') := <instantiate-typing(|sbs')> D
+
+
+  gc-typing: D@D(_, _, _, _) -> D
+
+  gc-typing: D@DC(ctx, _, T, C, _) -> DC(ctx', e', T', C', E')
+    with
+      V* := <all-vars> (ctx, T)
+    ; (C', sbs) := <gc-constraint-store(all-vars,polarity,gc-substitute,pp-partial-mcrl2typecheck-string|V*)> C
+    ; sbs' := <unify(is-var);debug> sbs
+    ; DC(ctx', e', T', _, E') := <instantiate-typing(|sbs')> D
+
+
+  gc-substitute: (sbs, T) -> T'
+    with
+      sbs' := <unify(is-var)> sbs
+    ; T' := <substitute(|sbs')> T
+
+
+  instantiate-typing(|sbs): D(ctx, e, T, E) -> D(ctx', e', T', E')
+    with
+      ctx' := <map((id, substitute(|sbs)))> ctx
+    ; e' := <bottomup(id{map(try(Type(substitute(|sbs))))})> e
+    ; T' := <substitute(|sbs)> T
+    ; E' := <try(sometd(instantiate-typing(|sbs)))> E
+
+  instantiate-typing(|sbs): DC(ctx, e, T, C, E) -> DC(ctx', e', T', C', E')
+    with
+      ctx' := <map((id, substitute(|sbs)))> ctx
+    ; e' := <bottomup(id{map(try(Type(substitute(|sbs))))})> e
+    ; T' := <substitute(|sbs)> T
+    ; C' := C
+    ; E' := <try(sometd(instantiate-typing(|sbs)))> E
+
+rules
+
+  substitute(|sbs) = <substitute(is-var)> (sbs, <id>)
+
+rules
+
+  /**
+   * sbs : List(Var * (n:Var, p:Var))
+   */
+  bisubstitute(|sbs) = bisubstitute(id|sbs)
+
+  bisubstitute(p|sbs) = FUNCTION(map(bisubstitute(p;Swap|sbs)), bisubstitute(p|sbs))
+
+  bisubstitute(p|sbs) = PRODUCT(bisubstitute(p|sbs))
+
+  bisubstitute(p|sbs) = LIST(bisubstitute(p|sbs))
+
+  bisubstitute(p|sbs) = SET(bisubstitute(p|sbs))
+
+  bisubstitute(p|sbs) = BAG(bisubstitute(p|sbs))
+
+  bisubstitute(p|sbs) = is-var; (lookup(|sbs) < p; Snd + id)
+
+  bisubstitute(p|sbs) = id
+  
+rules
+
+  polarize-scheme: T -> T
+    where not(FORALL(_, _) := T)
+
+  polarize-scheme: S@FORALL(V*, T) -> T'
+    with
+      FUNCTION(T1*, T2) := T
+    ; out-N* := <neg-vars;make-set> T2
+    ; out-P* := <pos-vars;make-set> T2
+    ; if not([] := <isect> (out-P*, out-N*)) then
+        <fatal-err(|"Variables are bipolar in codomain of type scheme")> S
+      end
+    ; out-V* := [out-N*, out-P*]
+    ; in-P* := <diff> (<mapconcat(pos-vars);make-set> T1*, out-V*)
+    ; in-N* := <diff> (<mapconcat(neg-vars);make-set> T1*, out-V*)
+    ; if not([] := <isect> (in-P*, in-N*)) then
+        <fatal-err(|"Variables are bipolar in domain of type scheme")> S
+      end
+    ; sbs-P := <map(\ V -> (V, PVAR(<var-name;newname> V)) \)> [out-P*, in-P*]
+    ; sbs-N := <map(\ V -> (V, NVAR(<var-name;newname> V)) \)> [out-N*, in-N*]
+    ; sbs := <conc> (sbs-P, sbs-N)
+    ; T' := <substitute(|sbs)> T

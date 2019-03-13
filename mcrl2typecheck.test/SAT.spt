@@ -1,0 +1,38 @@
+module SAT
+
+language mcrl2typecheck
+
+fixture [[
+  data_specification
+    sort TRUE, FALSE;
+    sort YES = List(TRUE);
+    sort NO  = List(FALSE);
+
+    map not : YES -> NO;
+    map not : NO  -> YES;
+
+    map or : YES # YES -> YES;
+    map or : YES # NO  -> YES;
+    map or : NO  # YES -> YES;
+    map or : NO  # NO  -> NO;
+
+    map and : YES # YES -> YES;
+    map and : YES # NO  -> NO;
+    map and : NO  # YES -> NO;
+    map and : NO  # NO  -> NO;
+
+  data_variables
+    yes : YES
+    no  : NO
+
+  data_expressions
+    [[...]]
+]]
+
+test excluded middle disjunction [[
+  or(p, not(p)):YES whr p = [] end
+]] error like "Ambiguous"
+
+test excluded middle conjunction [[
+  and(p, not(p)):NO whr p = [] end
+]] error like "Ambiguous"

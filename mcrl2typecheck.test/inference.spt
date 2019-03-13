@@ -1,0 +1,156 @@
+module inference
+
+language mcrl2typecheck
+
+test infer list type from function application [[
+  data_specification
+    map f : List(Nat) -> Bool;
+  data_expressions
+    f(x) whr x = [[ [] ]] end
+]] 0 errors
+   0 warnings
+   run get-ast-type on #1 to LIST(BOTTOM()) // expected LIST(NAT())
+
+test infer list type from two function applications [[
+  data_specification
+    map f : List(Nat) -> Bool;
+    map g : List(Int) -> Bool;
+  data_expressions
+    f(x) && g(x) whr x = [[ [] ]] end
+]] 0 errors
+   0 warnings
+   run get-ast-type on #1 to LIST(BOTTOM()) // expected LIST(NAT())
+
+test infer types of two lists from applying same function [[
+  data_specification
+    map f : List(Nat) -> Bool;
+  data_expressions
+    f(x) && f(y) whr x = [[ [] ]], y = [[ [] ]] end
+]] 0 errors
+   0 warnings
+   run get-ast-type on #1 to LIST(BOTTOM()) // expected LIST(NAT())
+   run get-ast-type on #2 to LIST(BOTTOM()) // expected LIST(NAT())
+
+test infer list type returned from lambda from use [[
+  data_specification
+    map f : List(Nat) -> Bool;
+  data_expressions
+    f(([[ lambda x:Int. [] ]])(1))
+]] 0 errors
+   0 warnings
+// run get-ast-type on #1 to FUNCTION(_, LIST(NAT()))
+   // get-ast-type on lambda's is broken
+
+test empty list is monomorphic under incompatible uses [[
+  data_specification
+    map f : (Int -> List(Nat)) -> Bool;
+    map g : (Int -> List(Bool)) -> Bool;
+  data_expressions
+    f(x) && g(x) whr x = lambda x:Int. [] end
+]] 0 errors // expect: >0 errors
+   0 warnings
+
+test identity function applied to bool [[
+  data_expressions
+    ([[ lambda x:Bool . x ]])(true)
+]] 0 errors
+   0 warnings
+   // get-ast-type on lambda's is broken
+
+test negate literal [[
+  data_expressions
+    !true
+]] 0 errors
+   0 warnings
+
+test compare two literals [[
+  data_expressions
+    true == true
+]] 0 errors
+   0 warnings
+
+test length of empty list [[
+  data_expressions
+    #[]
+]] 0 errors
+// 1 warning
+// warning like "Uninstantiated"
+
+test length of literal list [[
+  data_expressions
+    #[1]
+]] 0 errors
+   0 warnings
+
+test append two empty lists [[
+  data_expressions
+    [] ++ []
+]] 0 errors
+// 1 warning
+// warning like "Uninstantiated"
+
+test infer empty list type from append with non-empty list [[
+  data_expressions
+    [1] ++ [[ [] ]]
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(POS())
+   run get-ast-type on #1 to LIST(BOTTOM()) // expected LIST(POS())
+
+test infer two empty lists types from append with non-empty list [[
+  data_expressions
+    [1] ++ [[ [] ]] ++ [[ [] ]]
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(POS())
+   run get-ast-type on #1 to LIST(BOTTOM()) // expected LIST(POS())
+   run get-ast-type on #2 to LIST(BOTTOM()) // expected LIST(POS())
+
+test append non-empty lists with subtype elements [[
+  data_expressions
+    [1] ++ [0]
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(NAT())
+
+test inference for polymorphic type instantiation with literals [[
+  data_expressions
+    1 + 1 == 0
+]] 0 errors
+   0 warnings
+
+test inference for polymorphic type instantiation with subexpressions [[
+  data_variables
+    n : Nat
+  data_expressions
+    n + 1 == 0
+]] 0 errors
+   0 warnings
+
+test infer polymorphic instantiation from two branches, nested application returns supertype of other branch [[
+  data_specification
+    map f : Bool -> Nat;
+  data_variables
+    p : Pos
+    b : Bool
+  data_expressions
+    f(b) == p
+]] 0 errors
+   0 warnings
+
+test infer polymorphic instantiation from two branches, nested application returns subtype of other branch [[
+  data_specification
+    map g : Bool -> Pos;
+  data_variables
+    n : Nat
+    b : Bool
+  data_expressions
+    g(b) == n
+]] 0 errors
+   0 warnings
+
+test infer list of functions type [[
+  data_expressions
+    (fs.1)(1):Bool whr fs = [] end
+]] >0 errors // expected 0 errors
+   0 warnings

@@ -1,0 +1,104 @@
+module lists
+
+language mcrl2typecheck
+
+// tests for overload resolution, without literals
+
+test matching type list argument [[
+  data_specification
+      map f : List(Nat) -> Bool;
+
+  data_variables
+      xs : List(Nat)
+
+  data_expressions
+      f(xs)
+]] 0 errors
+   0 warnings
+
+test subtype list argument [[
+  data_specification
+      map f : List(Nat) -> Bool;
+
+  data_variables
+      xs : List(Pos)
+
+  data_expressions
+      f(xs)
+]] 0 errors
+   0 warnings
+
+test supertype list argument [[
+  data_specification
+      map f : List(Nat) -> Bool;
+
+  data_variables
+      xs : List(Int)
+
+  data_expressions
+      f(xs)
+]] analysis fails
+
+test overloaded list function (match most specific) [[
+  data_specification
+      map [[f]] : List(Pos) -> Bool;
+      map f : List(Nat) -> Bool;
+
+  data_variables
+      xs : List(Pos)
+
+  data_expressions
+      [[f]](xs)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+
+test overloaded list function (subtype of most specific) [[
+  data_specification
+      map [[f]] : List(Nat) -> Bool;
+      map f : List(Int) -> Bool;
+
+  data_variables
+      xs : List(Pos)
+
+  data_expressions
+      [[f]](xs)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+
+test overloaded list function (in between) [[
+  data_specification
+      map f : List(Pos) -> Bool;
+      map [[f]] : List(Int) -> Bool;
+
+  data_variables
+      xs : List(Nat)
+
+  data_expressions
+      [[f]](xs)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+
+test where-bound empty list instantiated to two related types [[
+  data_specification
+      map g : List(Pos) -> Bool;
+      map h : List(Nat) -> Bool;
+
+  data_expressions
+      g(x) && h(x) whr x = [[ [] ]] end
+]] 0 errors
+   0 warnings
+   run get-ast-type on #1 to LIST(BOTTOM()) // expected LIST(POS())
+
+test where-bound empty list instantiated to two different types [[
+  data_specification
+      sort A, B;
+      map g : List(A) -> Bool;
+      map h : List(B) -> Bool;
+
+  data_expressions
+      g(x) && h(x) whr x = [] end
+]] 0 errors // expected > 0 errors
+   0 warnings

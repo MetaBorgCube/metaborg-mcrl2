@@ -1,0 +1,43 @@
+module statics/subtyping
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+  pp
+
+rules
+
+  number-types = ![POS(), NAT(), INT(), REAL()]
+
+rules
+
+  is-var = ?PVAR(_)
+  is-var = ?NVAR(_)
+  is-var = ?VAR(_)
+
+  is-pos = ?PVAR(_)
+  is-neg = ?NVAR(_)
+
+  polarity =
+    is-pos
+ <+ not(is-neg) ; fatal-err(|"Polarity requires a variable as argument")
+ <+ fail
+
+  var-name = ?PVAR(<id>)
+  var-name = ?NVAR(<id>)
+  var-name = ?VAR(<id>)
+
+  new-var-pair: VAR(x) -> <new-var-pair> x
+
+  new-var-pair: x -> (NVAR(x'), PVAR(x'))
+    where <is-string> x
+    with x' := <newname> x
+
+  rename-var(s) = PVAR(s)
+  rename-var(s) = NVAR(s)
+  rename-var(s) = VAR(s)
+
+  all-vars = collect-all(is-var); make-set

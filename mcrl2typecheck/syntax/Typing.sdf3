@@ -1,0 +1,187 @@
+module Typing
+
+imports
+
+  mcrl2/Common
+  mcrl2/Sort
+  mcrl2/Data
+
+sorts
+
+  Int
+  ConstraintStore
+
+context-free syntax
+
+  Derivations.None = <(none)>
+  Derivations = <
+    === Sorts ===
+
+      <Sorts>
+
+    === Maps ===
+
+      <Decls>
+
+    === Vars ===
+
+      <Decls>
+
+    === Typings (work: <Int>) ===
+
+      <{Typing "\n\n"}*>
+
+    === Minimal Typings  ===
+
+      <{Typing "\n\n"}*>
+  >
+
+  Sorts       = {Sorts-Entry "\n"}*
+  Sorts-Entry = <<MCRL2-ID> = <Type>>
+
+  Decls       = {Decls-Entry "\n"}*
+  Decls-Entry = <<MCRL2-ID> : <Scheme>>
+
+  Typing-Pair = <
+    <Typing>
+    =/=
+    <Typing>
+  >
+
+context-free syntax
+
+  Scheme        = Type
+  Scheme.FORALL = <forall <{TVar ","}+>. <Type>>
+
+  Type.BOTTOM   = <Bot> /* extension */
+  Type.BOOL     = <Bool>
+  Type.POS      = <Pos>
+  Type.NAT      = <Nat>
+  Type.INT      = <Int>
+  Type.REAL     = <Real>
+  Type.LIST     = <List(<Type>)>
+  Type.SET      = <Set(<Type>)>
+  Type.BAG      = <Bag(<Type>)>
+  Type.NAMED    = <<MCRL2-ID>>
+  Type.FUNCTION = [[{Type " # "}+] -> [Type]]
+  Type.PRODUCT  = [[{Type " * "}+]]
+  Type          = <(<Type>)> {bracket}
+  Type          = TVar
+
+  TVar.PVAR     = <<MCRL2-ID>+>
+  TVar.NVAR     = <<MCRL2-ID>->
+  TVar.VAR      = <<MCRL2-ID>>
+
+  Subtype = [[Type] <: [Type]]
+
+context-free syntax
+
+  Context       = {Context-Entry ", "}*
+  Context-Entry = <<MCRL2-ID>:<Type>>
+
+  MinimalTypings = <
+    minimal typings:
+      <{Typing "\n"}*>
+  >
+
+  AllTypings = <
+    non-minimal typings:
+      <{Typing "\n"}*>
+    minimal typings:
+      <{Typing "\n"}*>
+  >
+
+  Typing.Ambiguous = <<MCRL2-DataExpr> is ambiguous>
+  Typing.Erroneous = <<MCRL2-DataExpr> is ill-typed>
+  Typing.Typed     = <<MCRL2-DataExpr> : <Type>>
+  Typing.D    = <
+    <Context> |- <MCRL2-DataExpr> : <Type>
+    <Evidence>
+  >
+  Typing.DC   = <
+    <Context> |- <MCRL2-DataExpr> : <Type> | <ConstraintStore>
+    <Evidence>
+  >
+
+  Evidence.NoEvidence          = <--- ...>
+  Evidence.T-DataRef-Local     = <--- (T-DataRef-Local)>
+  Evidence.T-DataRef-GlobalVar = <--- (T-DataRef-GlobalVar)>
+  Evidence.T-DataRef-GlobalMap = <--- (T-DataRef-GlobalMap)>
+  Evidence.T-DataRef-Op        = <--- (T-DataRef-Op)>
+  Evidence.T-Number-Pos        = <--- (T-Number-Pos)>
+  Evidence.T-Number-Nat        = <--- (T-Number-Nat)>
+  Evidence.T-Number-Int        = <--- (T-Number-Int)>
+  Evidence.T-True              = <--- (T-True)>
+  Evidence.T-False             = <--- (T-False)>
+  Evidence.T-EmptyList         = <--- (T-EmptyList)>
+  Evidence.T-EmptySet          = <--- (T-EmptySet)>
+  Evidence.T-EmptyBag          = <--- (T-EmptyBag)>
+  Evidence.T-ListEnum = <
+    --- (T-ListEnum)
+        <{Typing "\n"}+>
+  >
+  Evidence.T-BagEnum = <
+    --- (T-BagEnum)
+        <{BagEnumEltTyping "\n"}+>
+  >
+  Evidence.T-SetComp = <
+    --- (T-SetComp)
+        <Typing>
+  >
+  Evidence.T-BagComp = <
+    --- (T-BagComp)
+        <Typing>
+  >
+  Evidence.T-SetEnum = <
+    --- (T-SetEnum)
+        <{Typing "\n"}+>
+  >
+  Evidence.T-FunApp = <
+    --- (T-FunApp)
+        <Typing>
+        <{Typing "\n"}+>
+  >
+  Evidence.T-ForAll = <
+    --- (T-ForAll)
+        <Typing>
+  >
+  Evidence.T-Exists = <
+    --- (T-Exists)
+        <Typing>
+  >
+  Evidence.T-Lambda = <
+    --- (T-Lambda)
+        <Typing>
+  >
+  Evidence.T-Where = <
+    --- (T-Where)
+        <Typing>
+        <{Typing "\n"}+>
+  >
+  Evidence.T-As = <
+    --- (T-As)
+        <Typing>
+  >
+
+  BagEnumEltTyping = <
+    --- (BagEnumElt)
+        <Typing>
+        <Typing>
+  >
+
+context-free syntax
+
+  ConstraintStore = <{ <{Subtype "; "}*> }>
+
+  ConstraintGraph = <
+    digraph {
+      rankdir=BT;
+      node [shape=box];
+      <{ConstraintEdge "\n"}*>
+    }
+  >
+
+  ConstraintEdge = ["[Type]" -> "[Type]";]
+
+  Substitution       = <[<{Substitution-Entry ", "}*>]>
+  Substitution-Entry =  <<TVar> := <Type>>

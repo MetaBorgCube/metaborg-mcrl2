@@ -1,0 +1,423 @@
+module overloading
+
+language mcrl2typecheck
+
+// mcrl2typecheck AGREES
+test select on argument, with identical return types [[
+  data_specification
+      map f : Nat -> Bool;
+      map [[f]] : Pos -> Bool;
+
+  data_expressions
+      [[f]](1)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+f(1) : Bool
+    f : Pos -> Bool
+    1 : Pos
+    f(1) : Bool
+*/
+
+
+// mcrl2typecheck AGREES
+test select on two arguments, with identical return types [[
+  data_specification
+      map f : Nat # Nat -> Bool;
+      map [[f]] : Nat # Pos -> Bool;
+
+  data_expressions
+      [[f]](0, 1)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+f(0, 1) : Bool
+    f : Nat # Pos -> Bool
+    0 : Nat
+    1 : Pos
+    f(0, 1) : Bool
+*/
+
+
+// mcrl2typecheck DIFFERS
+test select on argument, with unrelated return types [[
+  data_specification
+      sort X, Y;
+      map f : Nat -> X;
+      map f : Pos -> Y;
+
+  data_expressions
+      f(1)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+// two derivations, which have uncomparable types, are unordered
+/* mcrl2typecheck.out
+f(1) : Y
+    f : Pos -> Y
+    1 : Pos
+    f(1) : Y
+*/
+
+
+// mcrl2typecheck AGREES
+test select on argument, with most specific return type [[
+  data_specification
+      map f : Nat -> Nat;
+      map [[f]] : Pos -> Pos;
+
+  data_expressions
+      [[f]](1)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+f(1) : Pos
+    f : Pos -> Pos
+    1 : Pos
+    f(1) : Pos
+*/
+
+
+// mcrl2typecheck DIFFERS
+test select on argument, with least specific return type [[
+  data_specification
+      map f : Nat -> Pos;
+      map f : Pos -> Nat;
+
+  data_expressions
+      f(1)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+// two derivations, their types are comparable
+// but the derivation with the smallest type (Nat), requires
+// the less specific function based on parameter type
+/* mcrl2typecheck.out
+f(1) : Nat
+    f : Pos -> Nat
+    1 : Pos
+    f(1) : Nat
+*/
+
+// triplet of death; an application f(1) that returns a function, that
+// (1) fails if used in an argument position
+// (2) succeeds in a function position f(1)(i), and selects different f in the
+//     inner application, depending on the i argument of the outer application
+test select on argument, return function in argument position [[
+  data_specification
+      map f : Nat -> Nat -> Bool;
+      map f : Pos -> Pos -> Bool;
+
+  data_expressions
+      f(1)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+test select on argument, return function in function position [[
+  data_specification
+      map [[f]] : Nat -> Nat -> Bool;
+      map f : Pos -> Pos -> Bool;
+
+  data_expressions
+      [[f]](1)(0)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+test select on argument, return function in function position [[
+  data_specification
+      map f : Nat -> Nat -> Bool;
+      map [[f]] : Pos -> Pos -> Bool;
+
+  data_expressions
+      [[f]](1)(1)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+// the place that decides the choice, is arbitrarily far away from the function
+// reference, as shown by these examples:
+test select on argument, return function in function position [[
+  data_specification
+      map [[f]] : Nat -> Pos -> Pos -> Nat -> Bool;
+      map f : Pos -> Nat -> Nat -> Pos -> Bool;
+
+  data_expressions
+      [[f]](1)(1)(1)(0)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+test select on argument, return function in function position [[
+  data_specification
+      map f : Nat -> Pos -> Pos -> Nat -> Bool;
+      map [[f]] : Pos -> Nat -> Nat -> Pos -> Bool;
+
+  data_expressions
+      [[f]](1)(1)(1)(1)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+// interesting observation: both alternatives can use Pos or Nat for all but the
+// last argument, without changing the typing.
+// if partially applied, the regular behaviour holds, where the chosen overload
+// cannot return a supertype of the other overload:
+test select on argument, return function in function position [[
+  data_specification
+      map f : Nat -> Pos -> Pos -> Bool;
+      map f : Pos -> Nat -> Nat -> Bool;
+
+  data_expressions
+      f(1)(1)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+// if the types of the last arguments are the same, the decision moves to the
+// second to last argument:
+test select on argument, return function in function position [[
+  data_specification
+      map [[f]] : Nat -> Pos -> Nat -> Bool;
+      map f : Pos -> Nat -> Nat -> Bool;
+
+  data_expressions
+      [[f]](1)(1)(0)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+test select on argument, return function in function position [[
+  data_specification
+      map f : Nat -> Pos -> Nat -> Bool;
+      map [[f]] : Pos -> Nat -> Nat -> Bool;
+
+  data_expressions
+      [[f]](1)(0)(0)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+
+
+// mcrl2typecheck DIFFERS
+test select on return type [[
+  data_specification
+      map f : Bool -> Nat;
+      map [[f]] : Bool -> Pos;
+
+  data_expressions
+      [[f]](true)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+// two derivations, equal parameter types, then pick smallest return type
+/* mcrl2typecheck.out
+[error]   Ambiguous operation f with 1 parameter.
+[error]   Type error while trying to cast f(true) to type untyped_sort.
+[error]   Could not type check data expression f(true)
+*/
+
+
+// mcrl2typecheck AGREES
+test select on incomparable return type [[
+  data_specification
+      sort X, Y;
+      map f : Bool -> X;
+      map f : Bool -> Y;
+
+  data_expressions
+      f(true)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+/* mcrl2typecheck.out
+[error]   Ambiguous operation f with 1 parameter.
+[error]   Type error while trying to cast f(true) to type untyped_sort.
+[error]   Could not type check data expression f(true)
+*/
+
+
+// mcrl2typecheck DIFFERS
+test context forces less specific overload [[
+  data_specification
+      sort X, Y;
+      map [[f]] : Nat -> X;
+      map f : Pos -> Y;
+      map g : X -> X;
+
+  data_expressions
+      g([[f]](1))
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+// one derivation, forced by the use of g
+/* mcrl2typecheck.out
+[error]   Unknown operation/variable g with 1 argument that matches type Y -> untyped_sort.
+[error]   Type error while trying to cast an application of g to arguments f(1) to type untyped_sort.
+[error]   Could not type check data expression g(f(1))
+*/
+
+
+// mcrl2typecheck AGREES
+test naked overloaded function reference [[
+  data_specification
+      sort X, Y;
+      map f : X -> X;
+      map f : Y -> Y;
+
+  data_expressions
+      f
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+/* mcrl2typecheck.out
+[error]   Ambiguous operation f.
+[error]   Could not type check data expression f
+*/
+
+
+// mcrl2typecheck AGREES
+test select an overloaded function argument with incomparable types [[
+  data_specification
+      sort X, Y;
+      map f : X -> X;
+      map [[f]] : Y -> Y;
+      map g : (Y -> Y) -> Nat;
+
+  data_expressions
+      g([[f]])
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+g(f) : Nat
+    g : (Y -> Y) -> Nat
+    f : Y -> Y
+    g(f) : Nat
+*/
+
+
+// mcrl2typecheck DIFFERS
+test multiple types for multiple arguments [[
+  data_specification
+      map [[f]] : Nat -> Nat;
+      map f : Nat -> Real;
+
+  data_expressions
+    [[f]](0)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+[error]   Ambiguous operation f with 1 parameter.
+[error]   Type error while trying to cast f(0) to type untyped_sort.
+[error]   Could not type check data expression f(0)
+*/
+
+
+// mcrl2typecheck DIFFERS
+test multiple types for multiple arguments [[
+  data_specification
+      map [[f]] : Nat -> Nat;
+      map f : Nat -> Real;
+      map g : Real # Real -> Bool;
+
+  data_expressions
+    g([[f]](0),[[f]](0))
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+   resolve #3 to #1
+/* mcrl2typecheck.out
+[error]   Fail to properly type f(0).
+[error]   Could not type check data expression g(f(0), f(0))
+*/
+
+
+// mcrl2typecheck DIFFERS
+test more incomparable non-smallest derivations [[
+  data_specification
+      map [[f]] : Bool -> Nat;
+      map f : Bool -> Real;
+      map g : Real # Real -> Bool;
+
+  data_expressions
+    g([[f]](true), [[f]](false))
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+   resolve #3 to #1
+/* mcrl2typecheck.out
+[error]   Fail to properly type f(true).
+[error]   Could not type check data expression g(f(true), f(false))
+*/
+
+
+// mcrl2typecheck AGREES
+test combinatorial fun [[
+  data_specification
+      map [[f]] : Nat -> Nat;
+      map f : Real -> Nat;
+
+  data_expressions
+    [[f]]([[f]](0))
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+   resolve #3 to #1
+/* mcrl2typecheck.out
+f(f(0)) : Nat
+    f : Nat -> Nat
+    f : Nat -> Nat
+    0 : Nat
+    f(0) : Nat
+    f(f(0)) : Nat
+*/
+
+
+// mcrl2typecheck AGREES
+test exponential number of derivations [[
+  data_specification
+      map [[f]] : Nat # Nat -> Nat;
+      map f : Real # Real -> Nat;
+
+  data_expressions
+      [[f]]([[f]](0,0),[[f]](0,0))
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+   resolve #3 to #1
+   resolve #4 to #1
+/* mcrl2typecheck.out
+f(f(0,0),f(0,0)) : Nat
+    f : Nat # Nat -> Nat
+    0 : Nat
+    f(0, 0) : Nat
+    f : Nat # Nat -> Nat
+    0 : Nat
+    f(0, 0) : Nat
+    f(f(0, 0), f(0, 0)) : Nat
+*/
+
+
+// mcrl2typecheck AGREES
+test overloading propagates through lambda [[
+  data_specification
+      map f : Nat -> Bool;
+      map [[f]] : Pos -> Bool;
+
+  data_expressions
+      (lambda x:Bool . [[f]])(true)(1)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+(lambda x:Int . f)(1)(1) : Bool
+    f : Pos -> Bool
+    lambda x: Int. f : Int -> Pos -> Bool
+    @cInt : Nat -> Int
+    @cNat : Pos -> Nat
+    1 : Pos
+    1 : Nat
+    1 : Int
+    (lambda x: Int. f)(1) : Pos -> Bool
+    1 : Pos
+    (lambda x: Int. f)(1)(1) : Bool
+*/

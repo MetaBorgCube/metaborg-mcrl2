@@ -1,0 +1,204 @@
+module statics/declarative/typing
+
+imports
+
+  signatures/-
+  signatures/mcrl2/-
+
+  analysis
+  statics/-
+  statics/declarative/-
+  statics/util
+  pp
+
+rules
+
+  toplevel-check-typing(|sort*, map*, var*) =
+      check-typing(|sort*, map*, var*, [])
+
+  check-typing(|sort*, map*, var*, ctx): D -> <id>
+    with
+      ctx' := <get-typing-ctx> D
+    where
+      <eq> (ctx, ctx')
+   <+ <pp-Context-string;log-err(|"Expected context")> ctx
+    ; <pp-Context-string;log-err(|"Derivation context")> ctx'
+    ; <pp-Typing-string;log-err(|"Context mismatch at");fail> D
+    where
+      <check-typing'(|sort*, map*, var*, ctx)> D
+   <+ <pp-Typing-string;log-err(|"Typing failed at");fail> D
+
+rules
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, DataRef(x), T, T-DataRef-Op()) -> <id>
+    where
+      stdlib;getsome(where((?x, match-scheme(|T))))
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, DataRef(x), T, T-DataRef-GlobalMap()) -> <id>
+    where
+      not(stdlib;getsome(where(?(x, _))))
+    ; <getsome(where(?(x, T)))> map*
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, DataRef(x), T, T-DataRef-GlobalVar()) -> <id>
+    where
+      not(stdlib;getsome(where(?(x, _))))
+    ; <not(getsome(where(?(x, _))))> map*
+    ; <getfirst(where(?(x, T)))> var*
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, DataRef(x), T, T-DataRef-Local()) -> <id>
+    where
+      not(stdlib;getsome(where(?(x, _))))
+    ; <not(getsome(where(?(x, _))))> map*
+    ; <not(getfirst(where(?(x, _))))> var*
+    ; <getfirst(where(?(x, T)))> ctx
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, Number(n), INT(), T-Number-Int()) -> <id>
+    where
+      <string-starts-with(|"-")> n
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, Number(n), NAT(), T-Number-Nat()) -> <id>
+    where
+      <not(string-starts-with(|"-"))> n
+    ; <eq> (n, "0")
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, Number(n), POS(), T-Number-Pos()) -> <id>
+    where
+      <not(string-starts-with(|"-"))> n
+    ; <not(eq)> (n, "0")
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, True(), BOOL(), T-True()) -> <id>
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, False(), BOOL(), T-False()) -> <id>
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, EmptyList(), LIST(_), T-EmptyList()) -> <id>
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, EmptySet(), SET(_), T-EmptySet()) -> <id>
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, EmptyBag(), BAG(_), T-EmptyBag()) -> <id>
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, ListEnum(e*), LIST(T), T-ListEnum(D*)) -> <id>
+    where
+      T* := <map(get-typing-type)> D*
+    ; <subtypes> (T*, T)
+    ; <map(check-typing(|sort*, map*, var*, ctx))> D*
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, BagEnum(elt*), BAG(T), T-BagEnum(Delt*)) -> <id>
+    where
+      (D1*, D2*) := <unzip> Delt*
+    ; T1* := <map(get-typing-type)> D1*
+    ; T2* := <map(get-typing-type)> D2*
+    ; <subtypes> (T1*, T)
+    ; <subtypes> (T2*, NAT())
+    ; <map(check-typing(|sort*, map*, var*, ctx))> D1*
+    ; <map(check-typing(|sort*, map*, var*, ctx))> D2*
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, SetBagComp(vdecl, e), SET(T), T-SetComp(D)) -> <id>
+    where
+      (x, T) := <vardecl-to-var(|sort*)> vdecl
+    ; ctx' := [(x, T)|ctx]
+    ; T' := <get-typing-type> D
+    ; <subtype> (T', BOOL())
+    ; <check-typing(|sort*, map*, var*, ctx')> D
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, SetBagComp(vdecl, e), BAG(T), T-BagComp(D)) -> <id>
+    where
+      (x, T) := <vardecl-to-var(|sort*)> vdecl
+    ; ctx' := [(x, T)|ctx]
+    ; T' := <get-typing-type> D
+    ; <subtype> (T', NAT())
+    ; <check-typing(|sort*, map*, var*, ctx')> D
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, SetEnum(e*), SET(T), T-SetEnum(D*)) -> <id>
+    where
+      T* := <map(get-typing-type)> D*
+    ; <subtypes> (T*, T)
+    ; <map(check-typing(|sort*, map*, var*, ctx))> D*
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, FunApp(e1, e2*), T12, T-FunApp(D1, D2*)) -> <id>
+    where
+      FUNCTION(T11*, T12) := <get-typing-type> D1
+    ; T2* := <map(get-typing-type)> D2*
+    ; <subtypes> (T2*, T11*)
+    ; <check-typing(|sort*, map*, var*, ctx)> D1
+    ; <map(check-typing(|sort*, map*, var*, ctx))> D2*
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, ForAll(vdecls, e), BOOL(), T-ForAll(D)) -> <id>
+    where
+      xT* := <map(varsdecl-to-vars(|sort*));concat> vdecls
+    ; ctx' := [xT*|ctx]
+    ; T' := <get-typing-type> D
+    ; <subtype> (T', BOOL())
+    ; <check-typing(|sort*, map*, var*, ctx')> D
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, Exists(vdecls, e), BOOL(), T-Exists(D)) -> <id>
+    where
+      xT* := <map(varsdecl-to-vars(|sort*));concat> vdecls
+    ; ctx' := [xT*|ctx]
+    ; T' := <get-typing-type> D
+    ; <subtype> (T', BOOL())
+    ; <check-typing(|sort*, map*, var*, ctx')> D
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, Lambda(vdecls, e), FUNCTION(T1*, T2), T-Lambda(D)) -> <id>
+    where
+      xT1* := <map(varsdecl-to-vars(|sort*));concat> vdecls
+    ; T1* := <map(Snd)> xT1*
+    ; ctx' := [xT1*|ctx]
+    ; T2 := <get-typing-type> D
+    ; <check-typing(|sort*, map*, var*, ctx')> D
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, Where(e, a*), T, T-Where(D1, D2*)) -> <id>
+    where
+      (x*, e*) := <map(\ Assign(x, e) -> (x, e) \);unzip> a*
+    ; T := <get-typing-type> D1
+    ; T* := <map(get-typing-type)> D2*
+    ; ctx' := <conc> (<zip> (x*, T*), ctx)
+    ; <check-typing(|sort*, map*, var*, ctx')> D1
+    ; <map(check-typing(|sort*, map*, var*, ctx))> D2*
+
+
+  check-typing'(|sort*, map*, var*, ctx): D(ctx, As(e, S), T, T-As(D)) -> <id>
+    where
+      T := <sortref-to-type(|sort*)> S
+    ; T' := <get-typing-type> D
+    ; <subtype> (T', T)
+    ; <check-typing(|sort*, map*, var*, ctx)> D
+
+rules
+
+  match-scheme(|T): FORALL(_, T') -> <id>
+    where
+      <pattern-match(is-var)> [(T', T)]
+
+  match-scheme(|T): T' -> <id>
+    where
+      not(FORALL(_, _) := T')
+    ; <eq> (T', T)
+
+rules
+
+  get-typing-ctx: D(ctx, _, _, _) -> ctx
+
+  get-typing-expr: D(_, e, _, _) -> e
+
+  get-typing-type: D(_, _, T, _) -> T
+
+  get-typing-ev: D(_, _, _, E) -> E
+
+  drop-typing-ev = D(id, id, id, !NoEvidence())
+
+  summarize-typing: DC(_, e, T, _, _) -> Typed(e, T)

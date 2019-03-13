@@ -1,0 +1,124 @@
+module statics/stdlib
+
+imports
+
+  libspoofax/editor/-
+
+  signatures/-
+
+rules
+
+  /** Predefined operations taken from the user manual
+   *  https://mcrl2.org/web/user_manual/language_reference/data.html
+   */
+
+  stdlib = ![
+    // Predefined operations on all sorts
+    ("`_==_`", FORALL([VAR("S")], FUNCTION([VAR("S") , VAR("S")          ], BOOL()  )))
+  , ("`_!=_`", FORALL([VAR("S")], FUNCTION([VAR("S") , VAR("S")          ], BOOL()  )))
+  , ("`_<_`",  FORALL([VAR("S")], FUNCTION([VAR("S") , VAR("S")          ], BOOL()  )))
+  , ("`_>_`",  FORALL([VAR("S")], FUNCTION([VAR("S") , VAR("S")          ], BOOL()  )))
+  , ("`_<=_`", FORALL([VAR("S")], FUNCTION([VAR("S") , VAR("S")          ], BOOL()  )))
+  , ("`_>=_`", FORALL([VAR("S")], FUNCTION([VAR("S") , VAR("S")          ], BOOL()  )))
+  , ("if",     FORALL([VAR("S")], FUNCTION([BOOL()   , VAR("S"), VAR("S")], VAR("S"))))
+
+    // Predefined operations on Booleans
+  , ("`!_`",   FUNCTION([BOOL()        ], BOOL()))
+  , ("`_&&_`", FUNCTION([BOOL(), BOOL()], BOOL()))
+  , ("`_||_`", FUNCTION([BOOL(), BOOL()], BOOL()))
+  , ("`_=>_`", FUNCTION([BOOL(), BOOL()], BOOL()))
+
+    // Predefined operations on numeric sorts
+  , ("`-_`", FUNCTION([POS()], INT()))
+  , ("`-_`", FUNCTION([NAT()], INT()))
+  , ("`-_`", FUNCTION([INT()], INT()))
+  , ("`-_`", FUNCTION([REAL()], REAL()))
+  , ("min", FUNCTION([POS(), POS()], POS()))
+  , ("min", FUNCTION([NAT(), NAT()], NAT()))
+  , ("min", FUNCTION([INT(), INT()], INT()))
+  , ("min", FUNCTION([REAL(), REAL()], REAL()))
+  , ("max", FUNCTION([POS(), POS()], POS()))
+  , ("max", FUNCTION([NAT(), NAT()], NAT()))
+  , ("max", FUNCTION([INT(), INT()], INT()))
+  , ("max", FUNCTION([REAL(), REAL()], REAL()))
+  , ("`_+_`", FUNCTION([POS(), POS()], POS()))
+  , ("`_+_`", FUNCTION([POS(), NAT()], POS()))
+  , ("`_+_`", FUNCTION([NAT(), POS()], POS()))
+  , ("`_+_`", FUNCTION([NAT(), NAT()], NAT()))
+  , ("`_+_`", FUNCTION([INT(), INT()], INT()))
+  , ("`_+_`", FUNCTION([REAL(), REAL()], REAL()))
+  , ("`_-_`", FUNCTION([POS(), POS()], INT()))
+  , ("`_-_`", FUNCTION([NAT(), NAT()], INT()))
+  , ("`_-_`", FUNCTION([INT(), INT()], INT()))
+  , ("`_-_`", FUNCTION([REAL(), REAL()], REAL()))
+  , ("`_*_`", FUNCTION([POS(), POS()], POS()))
+  , ("`_*_`", FUNCTION([NAT(), NAT()], NAT()))
+  , ("`_*_`", FUNCTION([INT(), INT()], INT()))
+  , ("`_*_`", FUNCTION([REAL(), REAL()], REAL()))
+  , ("`_/_`", FUNCTION([POS(), POS()], REAL()))
+  , ("`_/_`", FUNCTION([NAT(), NAT()], REAL()))
+  , ("`_/_`", FUNCTION([INT(), INT()], REAL()))
+  , ("`_/_`", FUNCTION([REAL(), REAL()], REAL()))
+  , ("succ", FUNCTION([POS()], POS()))
+  , ("succ", FUNCTION([NAT()], POS()))
+  , ("succ", FUNCTION([INT()], INT()))
+  , ("succ", FUNCTION([REAL()], REAL()))
+  , ("pred", FUNCTION([POS()], NAT()))
+  , ("pred", FUNCTION([NAT()], INT()))
+  , ("pred", FUNCTION([INT()], INT()))
+  , ("pred", FUNCTION([REAL()], REAL()))
+  , ("`_div_`", FUNCTION([NAT(), POS()], NAT()))
+  , ("`_div_`", FUNCTION([INT(), POS()], INT()))
+  , ("`_mod_`", FUNCTION([NAT(), POS()], NAT()))
+  , ("`_mod_`", FUNCTION([INT(), POS()], NAT()))
+  , ("exp", FUNCTION([POS(), NAT()], POS()))
+  , ("exp", FUNCTION([NAT(), NAT()], NAT()))
+  , ("exp", FUNCTION([INT(), NAT()], INT()))
+  , ("exp", FUNCTION([REAL(), INT()], REAL()))
+  , ("abs", FUNCTION([INT()], NAT()))
+  , ("abs", FUNCTION([REAL()], REAL()))
+  , ("floor", FUNCTION([REAL()], INT()))
+  , ("ceil", FUNCTION([REAL()], INT()))
+  , ("round", FUNCTION([REAL()], INT()))
+
+    // Predefined operations on mapping sorts
+  , ("`_[_->_]`", FORALL( [VAR("S"), VAR("I")]
+                        , FUNCTION( [ FUNCTION([VAR("S")] , VAR("I"))
+                                    , VAR("S")
+                                    , VAR("I")
+                                    ]
+                                  , FUNCTION([VAR("S")], VAR("I"))
+                                  )
+                        )
+    )
+
+    // Predefined operations on containers
+  , ("`_in_`", FORALL([VAR("S")], FUNCTION([VAR("S"), LIST(VAR("S"))], BOOL())))
+  , ("`_in_`", FORALL([VAR("S")], FUNCTION([VAR("S"), SET(VAR("S")) ], BOOL())))
+  , ("`_in_`", FORALL([VAR("S")], FUNCTION([VAR("S"), BAG(VAR("S")) ], BOOL())))
+
+    // Predefined operations on lists
+  , ("`_<|_`", FORALL([VAR("S")], FUNCTION([LIST(VAR("S")), VAR("S")      ], LIST(VAR("S")))))
+  , ("`_|>_`", FORALL([VAR("S")], FUNCTION([VAR("S")      , LIST(VAR("S"))], LIST(VAR("S")))))
+  , ("`#_`",   FORALL([VAR("S")], FUNCTION([LIST(VAR("S"))                ], NAT()         )))
+  , ("`_._`",  FORALL([VAR("S")], FUNCTION([LIST(VAR("S")), NAT()         ], VAR("S")      )))
+  , ("`_++_`", FORALL([VAR("S")], FUNCTION([LIST(VAR("S")), LIST(VAR("S"))], LIST(VAR("S")))))
+  , ("head",   FORALL([VAR("S")], FUNCTION([LIST(VAR("S"))                ], VAR("S")      )))
+  , ("tail",   FORALL([VAR("S")], FUNCTION([LIST(VAR("S"))                ], LIST(VAR("S")))))
+  , ("rhead",  FORALL([VAR("S")], FUNCTION([LIST(VAR("S"))                ], NAT()         )))
+  , ("rtail",  FORALL([VAR("S")], FUNCTION([LIST(VAR("S"))                ], NAT()         )))
+
+    // Predefined operations on sets
+  , ("`!_`",  FORALL([VAR("S")], FUNCTION([SET(VAR("S"))               ], SET(VAR("S")))))
+  , ("`_+_`", FORALL([VAR("S")], FUNCTION([SET(VAR("S")), SET(VAR("S"))], SET(VAR("S")))))
+  , ("`_-_`", FORALL([VAR("S")], FUNCTION([SET(VAR("S")), SET(VAR("S"))], SET(VAR("S")))))
+  , ("`_*_`", FORALL([VAR("S")], FUNCTION([SET(VAR("S")), SET(VAR("S"))], SET(VAR("S")))))
+
+    // Predefined operations bags
+  , ("`!_`",  FORALL([VAR("S")], FUNCTION([BAG(VAR("S"))               ], BAG(VAR("S")))))
+  , ("`_+_`", FORALL([VAR("S")], FUNCTION([BAG(VAR("S")), BAG(VAR("S"))], BAG(VAR("S")))))
+  , ("`_-_`", FORALL([VAR("S")], FUNCTION([BAG(VAR("S")), BAG(VAR("S"))], BAG(VAR("S")))))
+  , ("`_*_`", FORALL([VAR("S")], FUNCTION([BAG(VAR("S")), BAG(VAR("S"))], BAG(VAR("S")))))
+  , ("count", FORALL([VAR("S")], FUNCTION([VAR("S")     , BAG(VAR("S"))], NAT()        )))
+
+  ]

@@ -1,0 +1,168 @@
+module book-examples
+
+language mcrl2typecheck
+
+// mcrl2typecheck AGREES
+test example 15.1.13 [[
+  data_specification
+      map f : Real # Nat -> Bool;
+
+  data_expressions
+      f(0, 0)
+]] 0 errors
+   0 warnings
+/* mcrl2typecheck.out
+f(0, 0) : Bool
+    f : Real # Nat -> Bool
+    @cReal : Int # Pos -> Real
+    @cInt : Nat -> Int
+    0 : Nat
+    0 : Int
+    1 : Pos
+    0 : Real
+    0 : Nat
+    f(0, 0) : Bool
+*/
+
+
+// mcrl2typecheck DIFFERS
+test example 15.1.14 [[
+  data_specification
+      map f : Real # Nat -> Bool;
+      map f : Nat # Real -> Bool;
+
+  data_expressions
+      f(0, 0)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+// two derivations, incomparable parameter types, return type does not matter
+// book: equal parameter types, and same return type, so no smallest
+/* mcrl2typecheck.out
+f(0, 0) : Bool
+    f : Real # Nat -> Bool
+    @cReal : Int # Pos -> Real
+    @cInt : Nat -> Int
+    0 : Nat
+    0 : Int
+    1 : Pos
+    0 : Real
+    0 : Nat
+    f(0, 0) : Bool
+    --
+    f : Nat # Real -> Bool if map order is reversed
+*/
+
+
+// mcrl2typecheck & book DIFFER
+test example 15.1.15 (wrong in book) [[
+  data_specification
+      map f : Real # Nat -> Nat;
+      map f : Nat # Real -> Real;
+
+  data_expressions
+      f(0, 0)
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+// two derivations, incomparable parameter types, return type does not matter
+// book: equal parameter types, use smallest return type
+/* mcrl2typecheck.out
+f(0, 0) : Nat
+    f : Real # Nat -> Nat
+    @cReal : Int # Pos -> Real
+    @cInt : Nat -> Int
+    0 : Nat
+    0 : Int
+    1 : Pos
+    0 : Real
+    0 : Nat
+    f(0, 0) : Nat
+*/
+
+
+// mcrl2typecheck AGREES
+test example 15.1.16 [[
+  data_specification
+      map [[f]] : Real -> Nat -> Bool;
+      map f : Nat -> Real -> Bool;
+
+  data_expressions
+      [[f]](0)(0)
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+f(0)(0) : Bool
+    f : Real -> Nat -> Bool
+    @cReal : Int # Pos -> Real
+    @cInt : Nat -> Int
+    0 : Nat
+    0 : Int
+    1 : Pos
+    0 : Real
+    f(0) : Nat -> Bool
+    0 : Nat
+    f(0)(0) : Bool
+*/
+
+
+// mcrl2typecheck AGREES
+test example 15.1.17 (1) [[
+  data_specification
+      map [[f]] : Nat -> Bool;
+      map f : Real -> Bool;
+
+  data_expressions
+      [[f]](0)
+     %x(0) whr x = [[f]] end % why does this not typecheck?
+]] 0 errors
+   0 warnings
+   resolve #2 to #1
+/* mcrl2typecheck.out
+f(0) : Bool
+    f : Nat -> Bool
+    0 : Nat
+    f(0) : Bool
+*/
+
+
+// mcrl2typecheck DIFFERS
+test example 15.1.17 (2) [[
+  data_specification
+      map f : Nat -> Bool;
+      map [[f]] : Real -> Bool;
+      map h : (Nat -> Bool) -> Bool;
+      map [[h]] : (Real -> Bool) -> Bool;
+
+  data_expressions
+      [[h]](x) whr x = [[f]] end
+]] 0 errors
+   0 warnings
+   resolve #4 to #1
+   resolve #3 to #2
+// three derivations, most precise argument, closest parameter type
+/* mcrl2typecheck.out
+[error]   Ambiguous operation h with 1 parameter.
+[error]   Type error while trying to cast h(f) to type untyped_sort.
+[error]   Could not type check data expression h(f)
+*/
+
+
+// mcrl2typecheck AGREES
+test example 15.1.17 (3) [[
+  data_specification
+      map f : Nat -> Bool;
+      map f : Real -> Bool;
+      map h : (Nat -> Bool) -> Bool;
+      map h : (Real -> Bool) -> Bool;
+
+  data_expressions
+      (x(0)) && (h(x)) whr x = f end
+]] 1 error
+   error like "Ambiguous"
+   0 warnings
+/* mcrl2typecheck.out
+[error]   Ambiguous operation f.
+[error]   Could not type check data expression x(0) && h(x) whr x=f end
+*/

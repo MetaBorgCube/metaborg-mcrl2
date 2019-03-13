@@ -1,0 +1,129 @@
+module statics/declarative/order
+
+imports
+
+  signatures/-
+
+  statics/-
+  statics/declarative/-
+
+rules
+
+  prune-unsafe: (D1, D2) -> <id>
+    with
+      T1 := <get-typing-type> D1
+    ; T2 := <get-typing-type> D2
+    where
+      <is-var + ?FUNCTION(_, _)> T1
+    + <is-var + ?FUNCTION(_, _)> T2
+
+  prune-typings: D* -> D'*
+    with
+      D'* := <list-mins(prune-unsafe < fail + leq-typing)> D*
+
+  toplevel-minimal-typings: D* -> D'*
+    with
+      D'* := <list-mins(leq-typing)> D*
+
+  toplevel-partition-typings: D* -> (D1*, D2*)
+    with
+      (D1*, D2*) := <list-partition(leq-typing)> D*
+
+rules
+
+  lt-typing = not(eq); leq-typing
+
+  leq-typing: (D@D(ctx, _, T, _), D'@D(ctx', _, T', _)) -> <id>
+    where
+      <subctx> (ctx, ctx')
+    ; <subtype> (T, T')
+    ; <leq-typing'> (D, D')
+
+rules
+
+  leq-typing': (D@D(_, _, T, T-DataRef-Op()), D'@D(_, _, T', T-DataRef-Op())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-DataRef-GlobalMap()), D'@D(_, _, T', T-DataRef-GlobalMap())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-DataRef-GlobalVar()), D'@D(_, _, T', T-DataRef-GlobalVar())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-DataRef-Local()), D'@D(_, _, T', T-DataRef-Local())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-Number-Pos()), D'@D(_, _, T', T-Number-Pos())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-Number-Nat()), D'@D(_, _, T', T-Number-Nat())) -> <id>
+  
+  leq-typing': (D@D(_, _, T, T-Number-Int()), D'@D(_, _, T', T-Number-Int())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-True()), D'@D(_, _, T', T-True())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-False()), D'@D(_, _, T', T-False())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-EmptyList()), D'@D(_, _, T', T-EmptyList())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-EmptySet()), D'@D(_, _, T', T-EmptySet())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-EmptyBag()), D'@D(_, _, T', T-EmptyBag())) -> <id>
+
+  leq-typing': (D@D(_, _, T, T-ListEnum(E*)), D'@D(_, _, T', T-ListEnum(E'*))) -> <id>
+    where
+      <leq-typings> (E*, E'*)
+
+  leq-typing': (D@D(_, _, T, T-BagEnum(Eelt*)), D'@D(_, _, T', T-BagEnum(Eelt'*))) -> <id>
+    with
+      (E1*, E2*) := <unzip> Eelt*
+    ; (E1'*, E2'*) := <unzip> Eelt'*
+    where
+      <leq-typings> (E1*, E1'*)
+    ; <leq-typings> (E2*, E2'*)
+
+  leq-typing': (D@D(_, _, T, T-SetComp(E)), D'@D(_, _, T', T-SetComp(E'))) -> <id>
+    where
+      <leq-typing> (E, E')
+
+  leq-typing': (D@D(_, _, T, T-BagComp(E)), D'@D(_, _, T', T-BagComp(E'))) -> <id>
+    where
+      <leq-typing> (E, E')
+
+  leq-typing': (D@D(_, _, T, T-SetEnum(E*)), D'@D(_, _, T', T-SetEnum(E'*))) -> <id>
+    where
+      <leq-typings> (E*, E'*)
+
+  leq-typing': (D@D(_, _, T, T-FunApp(E1, E2*)), D'@D(_, _, T', T-FunApp(E1', E2'*))) -> <id>
+    where
+      <leq-typings> (E2*, E2'*)
+    ; FUNCTION(T11* , T12 ) := <get-typing-type> E1
+    ; FUNCTION(T11'*, T12') := <get-typing-type> E1'
+    ; <subtypes> (T11*, T11'*)
+    ; if <eq> (T11*, T11'*) then
+        <leq-typing> (E1, E1')
+      end
+
+  leq-typing': (D@D(_, _, T, T-ForAll(E)), D'@D(_, _, T', T-ForAll(E'))) -> <id>
+    where
+      <leq-typing> (E, E')
+
+  leq-typing': (D@D(_, _, T, T-Exists(E)), D'@D(_, _, T', T-Exists(E'))) -> <id>
+    where
+      <leq-typing> (E, E')
+
+  leq-typing': (D@D(_, _, T, T-Lambda(E)), D'@D(_, _, T', T-Lambda(E'))) -> <id>
+    where
+      <leq-typing> (E, E')
+
+  leq-typing': (D@D(_, _, T, T-Where(E1, E2*)), D'@D(_, _, T', T-Where(E1', E2'*))) -> <id>
+    where
+      <leq-typing> (E1, E1')
+    ; T2* := <map(get-typing-type)> E2*
+    ; T2'* := <map(get-typing-type)> E2'*
+    ; if <eq> (T2*, T2'*) then
+        <leq-typings> (E2*, E2'*)
+      end
+
+  leq-typing': (D@D(_, _, T, T-As(E)), D'@D(_, _, T', T-As(E'))) -> <id>
+    where
+      <leq-typing> (E, E')
+
+rules
+
+  leq-typings = zip(leq-typing)

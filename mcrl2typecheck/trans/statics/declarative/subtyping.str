@@ -1,0 +1,154 @@
+module statics/declarative/subtyping
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+
+rules
+
+  subtype: (X, X) -> <id>
+    where <is-var> X
+
+  subtype: (BOOL(), BOOL()) -> <id>
+
+  subtype: (T, U) -> <id>
+    with
+      N* := <number-types>
+    where
+      i := <get-index> (T, N*)
+    ; j := <get-index> (U, N*)
+    ; <leq> (i, j)
+
+  subtype: (LIST(T), LIST(U)) -> <id>
+    where
+      <subtype> (T, U)
+
+  subtype: (SET(T), SET(U)) -> <id>
+    where
+      <subtype> (T, U)
+
+  subtype: (BAG(T), BAG(U)) -> <id>
+    where
+      <subtype> (T, U)
+
+  subtype: (NAMED(x), NAMED(x)) -> <id>
+
+  subtype: (FUNCTION(T1*, T2), FUNCTION(U1*, U2)) -> <id>
+    where
+      <subtypes> (U1*, T1*)
+    ; <subtype> (T2, U2)
+
+  subtype: (PRODUCT(T*), PRODUCT(U*)) -> <id>
+    where
+      <subtypes> (T*, U*)
+
+  subtype: (BOTTOM(), T) -> <id>
+
+  subtypes = zip(subtype)
+  subtypes: (Ts, Us) -> <zip;map(subtype)> (Ts, Us)
+    where <is-list> Ts; <is-list> Us
+  subtypes: (T, Us) -> <map(\ U -> (T, U) \);map(subtype)> Us
+    where <not(is-list)> T; <is-list> Us
+  subtypes: (Ts, U) -> <map(\ T -> (T, U) \);map(subtype)> Ts
+    where <is-list> Ts; <not(is-list)> U
+
+rules
+
+  lub: (BOOL(), BOOL()) -> BOOL()
+
+  lub: (T1, T2) -> T
+    with
+      N* := <number-types>
+    where
+      i := <get-index> (T1, N*)
+    ; j := <get-index> (T2, N*)
+    ; k := <max> (i, j)
+    ; T := <index(|k)> N*
+
+  lub: (LIST(T1), LIST(T2)) -> LIST(T)
+    with
+      T := <lub> (T1, T2)
+
+  lub: (SET(T1), SET(T2)) -> SET(T)
+    with
+      T := <lub> (T1, T2)
+
+  lub: (BAG(T1), BAG(T2)) -> BAG(T)
+    with
+      T := <lub> (T1, T2)
+
+  lub: (NAMED(x), NAMED(x)) -> NAMED(x)
+
+  lub: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> FUNCTION(T1*, T2)
+    where
+      <eq> (<length> T11*, <length> T21*)
+    with
+      T1* := <zip(glb)> (T11*, T21*)
+    ; T2 := <lub> (T12, T22)
+
+  lub: (PRODUCT(T1*), PRODUCT(T2*)) -> PRODUCT(T*)
+    where
+      <eq> (<length> T1*, <length> T2*)
+    with
+      T* := <zip(lub)> (T1*, T2*)
+
+  lub: (BOTTOM(), T) -> T
+
+  lub: (T, BOTTOM()) -> T
+
+rules
+
+  glb: (BOOL(), BOOL()) -> BOOL()
+
+  glb: (T1, T2) -> T
+    with
+      N* := <number-types>
+    where
+      i := <get-index> (T1, N*)
+    ; j := <get-index> (T2, N*)
+    ; k := <min> (i, j)
+    ; T := <index(|k)> N*
+
+  glb: (LIST(T1), LIST(T2)) -> LIST(T)
+    with
+      T := <glb> (T1, T2)
+
+  glb: (SET(T1), SET(T2)) -> SET(T)
+    with
+      T := <glb> (T1, T2)
+
+  glb: (BAG(T1), BAG(T2)) -> BAG(T)
+    with
+      T := <glb> (T1, T2)
+
+  glb: (NAMED(x), NAMED(x)) -> NAMED(x)
+
+  glb: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> FUNCTION(T1*, T2)
+    where
+      <eq> (<length> T11*, <length> T21*)
+    with
+      T1* := <zip(lub)> (T11*, T21*)
+    ; T2 := <glb> (T12, T22)
+
+  glb: (PRODUCT(T1*), PRODUCT(T2*)) -> PRODUCT(T*)
+    where
+      <eq> (<length> T1*, <length> T2*)
+    with
+      T* := <zip(glb)> (T1*, T2*)
+
+  glb: (BOTTOM(), T) -> BOTTOM()
+
+  glb: (T, BOTTOM()) -> BOTTOM()
+
+rules
+
+  subctx: (ctx, ctx') -> <id>
+    with
+      (x*, T*) := <unzip> ctx
+    ; (x'*, T'*) := <unzip> ctx'
+    ; <eq> (x*, x'*)
+    where
+      <subtypes> (T*, T'*)

@@ -1,0 +1,77 @@
+module statics/util
+
+imports
+
+  signatures/-
+
+  libspoofax/term/annotation
+
+  analysis
+
+rules
+
+  get-ast-ref = get-annotation(?Ref(<id>))
+
+  get-ast-type = get-annotation(?Type(<id>))
+
+rules
+
+  // list of n goes to list of n! pairs
+  // <list-cmb> [1,2,3] => [(1,2), (1,3), (2,3)]
+  list-cmb: [] -> []
+  list-cmb: [x|xs] -> <conc> (<map(!(x,<id>))> xs, <list-cmb> xs)
+  
+  // list n of lists m1, ..., mn to list m1 * ... * mn of lists n
+  // <list-cart> [ [1,2], ["a","b"], [true,false] ]
+  //   => [ [1,"a",true], [1,"a",false]
+  //      , [1,"b",true], [1,"b",false]
+  //      , [2,"a",true], [2,"a",false]
+  //      , [2,"b",true], [2,"b",false]
+  //      ]
+  list-cart: [] -> []
+  list-cart: [xs] -> <map(MkSingleton)> xs
+  list-cart: [xs|xss] -> <cart(![<Fst>|<Snd>])> (xs, <list-cart> xss)
+
+  list-mins(leq) = list-mins(id, leq)
+
+  // find minimal elements in a list
+  list-mins(s, leq) = ?xs;
+    filter(where(\ x -> <filter(\ x' -> <not(eq); leq> (<s> x', <s> x) \);?[]> xs \))
+
+  list-partition(leq) = list-partition(id, leq)
+
+  // find minimal elements and others in a list
+  list-partition(s, leq) = ?xs;
+    partition(where(\ x -> <filter(\ x' -> <not(eq); leq> (<s> x', <s> x) \);?[]> xs \))
+
+  elem(|xs) = <elem> (<id>, xs)
+
+  lookup(|xs) = <lookup> (<id>, xs)
+
+  fold1(s) = ?[<id>] <+ foldr1(s)
+
+  getsome(s) = filter(s);?[_|_]
+
+rules
+
+  add-counter(|n) =
+    ?c; get-counter; <add> (<id>, n); where(<set-counter> (c, <id>))
+
+  with-counter(s) = {| AddCount, GetCount:
+    where(
+      counter := <new-counter>
+    ; rules(
+        AddCount: n -> <add-counter(|n)> counter
+        GetCount: _ -> <get-counter> counter
+      )
+    )
+  ; s
+  |}
+
+rules
+
+  info-msg(|msg : String) =
+    log(|Info(), msg)
+
+  info(|msg : String) =
+    log(|Info(), msg, <id>)

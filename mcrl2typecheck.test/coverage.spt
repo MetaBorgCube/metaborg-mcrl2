@@ -1,0 +1,483 @@
+module coverage
+
+language mcrl2typecheck
+
+fixture [[
+  data_specification
+    map f : Nat -> Bool;
+    map g : List(Int) # List(Int) -> Bool;
+    map h : Nat -> Nat;
+
+  data_variables
+    b : Bool
+    p : Pos
+    n : Nat
+    i : Int
+    r : Real
+    
+    L : List(Nat)
+    B : Bag(Nat)
+    S : Set(Nat)
+
+  data_expressions
+    [[...]]
+]]
+
+test global variable reference [[
+  b
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test global function reference [[
+  f
+]] 0 errors
+   0 warnings
+   run get-ast-type to FUNCTION([NAT()], BOOL())
+
+test missing function reference [[
+  f2
+]] > 0 errors
+   0 warnings
+
+test positive number literal [[
+  1
+]] 0 errors
+   0 warnings
+   run get-ast-type to POS()
+
+test natural number literal [[
+  0
+]] 0 errors
+   0 warnings
+   run get-ast-type to NAT()
+
+test true literal [[
+  true
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test false literal [[
+  false
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test empty list literal [[
+  []
+]] 0 errors
+// 1 warning
+// warning like "Uninstantiated"
+   run get-ast-type to LIST(_)
+
+test empty set literal [[
+  {}
+]] 0 errors
+// 1 warning
+// warning like "Uninstantiated"
+   run get-ast-type to SET(_)
+
+test empty bag literal [[
+  {:}
+]] 0 errors
+// 1 warning
+// warning like "Uninstantiated"
+   run get-ast-type to BAG(_)
+
+test numbers list enumeration [[
+  [ 1, 2, 3 ]
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(POS())
+
+test numbers list enumeration [[
+  [ (lambda x:Pos . i), (lambda x:Nat . n), (lambda x:Int . p) ]
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(FUNCTION([POS()], INT()))
+
+test incompatible list enumeration [[
+  [ 1, true, 3 ]
+]] > 0 errors
+   0 warnings
+
+test bag enumeration [[
+  { true: 2, false: 5 }
+]] 0 errors
+   0 warnings
+   run get-ast-type to BAG(BOOL())
+
+test bag enumeration, wrong count [[
+  { true: 2, false: true }
+]] > 0 errors
+
+test bag enumeration, wrong values [[
+  { true: 2, 3: 5 }
+]] > 0 errors
+
+test set comprehension [[
+  { i : Int | i > 0 }
+]] 0 errors
+   0 warnings
+   run get-ast-type to SET(INT())
+
+test set comprehension [[
+  { i : Int | i == true }
+]] > 0 errors
+
+test set comprehension [[
+  { i : Int | i }
+]] > 0 errors
+
+test bag comprehension [[
+  { n : Nat | n }
+]] 0 errors
+   0 warnings
+   run get-ast-type to BAG(NAT())
+
+test set enumeration [[
+  { 2, 5, 1 }
+]] 0 errors
+   0 warnings
+   run get-ast-type to SET(POS())
+
+test function update [[
+  f[0 -> true]
+]] 0 errors
+   0 warnings
+   run get-ast-type to FUNCTION([NAT()], BOOL())
+
+test function update (subtype of domain) [[
+  h[p -> n]
+]] 0 errors
+   0 warnings
+
+test function update (supertype of domain) [[
+  h[i -> n]
+]] > 0 errors
+   0 warnings
+
+test function update (subtype of codomain) [[
+  h[n -> p]
+]] 0 errors
+   0 warnings
+
+test function update (supertype of codomain) [[
+  h[n -> i]
+]] 0 errors
+   0 warnings
+
+test unary function application [[
+  f(1)
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test unary function application, wrong number of arguments [[
+  f(1, 2)
+]] > 0 errors
+   0 warnings
+
+test unary function application, wrong argument type [[
+  f(true)
+]] > 0 errors
+   0 warnings
+
+test unary function application, sub type [[
+  f(p)
+]] 0 errors
+   0 warnings
+
+test unary function application, super type [[
+  f(i)
+]] > 0 errors
+   0 warnings
+
+test binary function application [[
+  g([1, 2, 3], [5])
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test negation [[
+  !true
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test negation on number [[
+  !1
+]] > 0 errors
+   0 warnings
+
+test set complement [[
+  !S
+]] 0 errors
+   0 warnings
+   run get-ast-type to SET(NAT())
+
+test unary minus [[
+  -i
+]] 0 errors
+   0 warnings
+   run get-ast-type to INT()
+
+test unary minus [[
+  -b
+]] > 0 errors
+   0 warnings
+
+test list size [[
+  #L
+]] 0 errors
+   0 warnings
+   run get-ast-type to NAT()
+
+test set size [[
+  #S
+]] > 0 errors
+   0 warnings
+
+test forall [[
+  forall n:Nat . n == 0
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test forall, wrong body type [[
+  forall n:Nat . n - 1
+]] > 0 errors
+   0 warnings
+
+test exists [[
+  exists n:Nat . n == 0
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test exists, wrong body type [[
+  exists n:Nat . {}
+]] > 0 errors
+   0 warnings
+
+test lambda [[
+  lambda n:Nat . n + 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to FUNCTION([NAT()], POS())
+
+test implication [[
+  false => (b == true)
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test implication, wrong antecedent type [[
+  false => i
+]] > 0 errors
+   0 warnings
+
+test conjunction [[
+  b && false
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test disjunction [[
+  b || true
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test number equality [[
+  i == 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test sub types equality [[
+  i == p
+]] 0 errors
+   0 warnings
+
+test different types equality [[
+  i == b
+]] > 0 errors
+   0 warnings
+
+test number inequality [[
+  i != 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test number less than [[
+  2 < 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test number less than or equal [[
+  2 <= 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test number greater than or equal [[
+  2 >= 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test number greater than [[
+  2 > 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test list membership [[
+  1 in L
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test set membership [[
+  1 in S
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test bag membership [[
+  1 in B
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test list cons [[
+  1 |> L
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(NAT())
+
+test list snoc [[
+  L <| 1
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(NAT())
+
+test list concatenation [[
+  L ++ L
+]] 0 errors
+   0 warnings
+   run get-ast-type to LIST(NAT())
+
+test addition [[
+  i + n
+]] 0 errors
+   0 warnings
+   run get-ast-type to INT()
+
+test set union [[
+  S + S
+]] 0 errors
+   0 warnings
+   run get-ast-type to SET(NAT())
+
+test bag union [[
+  B + B
+]] 0 errors
+   0 warnings
+   run get-ast-type to BAG(NAT())
+
+test subtraction [[
+  i - n
+]] 0 errors
+   0 warnings
+   run get-ast-type to INT()
+
+test set difference [[
+  S - S
+]] 0 errors
+   0 warnings
+   run get-ast-type to SET(NAT())
+
+test bag difference [[
+  B - B
+]] 0 errors
+   0 warnings
+   run get-ast-type to BAG(NAT())
+
+test division [[
+  r / r
+]] 0 errors
+   0 warnings
+   run get-ast-type to REAL()
+
+test integer division [[
+  6 div 3
+]] 0 errors
+   0 warnings
+   run get-ast-type to _
+
+test integer remainder [[
+  6 mod 4
+]] 0 errors
+   0 warnings
+   run get-ast-type to _
+
+test multiplication [[
+  i * n
+]] 0 errors
+   0 warnings
+   run get-ast-type to INT()
+
+test set intersection [[
+  S * S
+]] 0 errors
+   0 warnings
+   run get-ast-type to SET(NAT())
+
+test bag intersection [[
+  B * B
+]] 0 errors
+   0 warnings
+   run get-ast-type to BAG(NAT())
+
+test list element [[
+  L.2
+]] 0 errors
+   0 warnings
+   run get-ast-type to NAT()
+
+test where [[
+  f(x) whr x = n end
+]] 0 errors
+   0 warnings
+   run get-ast-type to BOOL()
+
+test where, incorrect bound expression [[
+  f(x) whr x = true && 1 end
+]] > 0 errors
+   0 warnings
+
+test where, incorrect body expression [[
+  f(x) whr x = true end
+]] > 0 errors
+   0 warnings
+
+test super type ascription [[
+  p:Int
+]] 0 errors
+   0 warnings
+   run get-ast-type to INT()
+
+test sub type ascription [[
+  i:Pos
+]] > 0 errors
+   0 warnings
+
+test incorrect type ascription [[
+  b:Int
+]] > 0 errors
+   0 warnings

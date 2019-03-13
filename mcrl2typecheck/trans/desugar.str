@@ -1,0 +1,61 @@
+module desugar
+
+imports
+
+  libspoofax/editor/-
+
+  signatures/-
+  signatures/mcrl2/-
+  
+  mcrl2/syntax/-
+
+rules
+
+  op-to-fun = ![
+    ("FunUpdate", "`_[_->_]`")
+  , ("Neg_SetCompl", "`!_`")
+  , ("UnaryMinus", "`-_`")
+  , ("ListSize", "`#_`")
+  , ("Impl", "`_=>_`")
+  , ("Conj", "`_||_`")
+  , ("Disj", "`_&&_`")
+  , ("Equal", "`_==_`")
+  , ("Inequal", "`_!=_`")
+  , ("Smaller", "`_<_`")
+  , ("SmallerOrEqual", "`_<=_`")
+  , ("LargerOrEqual", "`_>=_`")
+  , ("Larger", "`_>_`")
+  , ("Member", "`_in_`")
+  , ("ListCons", "`_|>_`")
+  , ("ListSnoc", "`_<|_`")
+  , ("ListConc", "`_++_`")
+  , ("Add_SetBagUnion", "`_+_`")
+  , ("Sub_SetBagDiff", "`_-_`")
+  , ("Div", "`_/_`")
+  , ("IntDiv", "`_div_`")
+  , ("IntMod", "`_mod_`")
+  , ("Mul_SetBagIsect", "`_*_`")
+  , ("EltAt", "`_._`")
+  ]
+  
+  fun-to-op = op-to-fun;map(Swap)
+
+rules
+
+  desugar-all =
+    mcrl2-desugar-all
+  ; topdown(try(desugar-op))
+
+  desugar-op: c#(t*) -> FunApp(DataRef(x), t*)
+    where
+      x := <lookup> (c, <op-to-fun>)
+
+rules
+
+  resugar-all =
+    topdown(try(resugar-op));
+    mcrl2-resugar-all
+
+  resugar-op: FunApp(DataRef(x), t*) -> c#(t*)
+    where
+      c := <lookup> (x, <fun-to-op>)

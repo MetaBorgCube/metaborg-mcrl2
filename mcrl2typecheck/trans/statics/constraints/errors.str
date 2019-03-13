@@ -1,0 +1,32 @@
+module statics/constraints/errors
+
+signature
+  constructors
+    Errors : List(Message) -> Errors
+
+rules
+
+  or-error(|e, msg) =
+    fmap(?[] < !Errors([(e, msg)]) + id)
+
+rules
+
+  has-errors = ?Errors(_)
+
+  get-errors = ?Errors(<id>)
+
+  // @type M(X) -> M(<s> X)
+  fmap(s) =
+    has-errors <+ s
+
+  fjoin(s) = fjoin; fmap(s)
+
+  // @type [M(X)] -> M([X])
+  fjoin =
+    is-list; (filter(has-errors); ?[_|_] < !Errors(<mapconcat(get-errors)>) + id)
+    
+  // @type (M(X) * M(Y)) -> M(X * Y)
+  fjoin: (Errors(msg1*), Errors(msg2*)) -> Errors([msg1*, msg2*])
+  fjoin: (Errors(msg1*), _) -> Errors(msg1*)
+  fjoin: (_, Errors(msg2*)) -> Errors(msg2*)
+  fjoin: (x, y) -> (x, y)

@@ -1,0 +1,62 @@
+module statics/typing
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+
+rules
+
+   build-env: Spec(decls, vars, _) -> (sort*, map*, var*)
+    with
+      sortspec* := <collect-all(?SortSpec(<id>));concat;make-set> decls
+    ; sort* := <foldl(sortspec-to-sorts)> (sortspec*, [])
+    ; map* := <collect-all(mapspec-to-maps(|sort*));concat;make-set> decls
+    ; var* := <collect-all(varsdecl-to-vars(|sort*));concat;make-set> vars
+
+  sortspec-to-sorts:
+      (SortDecl(xs), sort*) ->  <conc> (sort'*, sort*)
+    with
+      sort'* := <map(\ x -> (x, NAMED(x)) \)> xs
+
+  sortspec-to-sorts:
+      (SortAlias(x, S), sort*) -> <conc> (sort'*, sort*)
+    with
+      T := <sortref-to-type(|sort*)> S
+    ; sort'* := [(x, T)]
+
+  mapspec-to-maps(|sort*):
+      MapSpec(xs, S) -> <map(\ x -> (x, <sortref-to-type(|sort*)> S) \)> xs
+
+  varsdecl-to-vars(|sort*):
+      VarsDecl(xs, S) -> <map(\ x -> (x, <sortref-to-type(|sort*)> S) \)> xs
+
+  vardecl-to-var(|sort*):
+      VarDecl(x, S) -> (x, <sortref-to-type(|sort*)> S)
+
+rules
+
+  check-sorts(|sort*): node -> error*
+    with
+      error* := <collect-all(check-sortref(|sort*))> node
+
+  check-sortref(|sort*): SortRef(sort) -> (sort, "Sort not defined.")
+    where
+      <not(lookup)> (sort, sort*)
+
+rules
+
+  sortref-to-type(|sort*): Bool()          -> BOOL()
+  sortref-to-type(|sort*): Pos()           -> POS()
+  sortref-to-type(|sort*): Nat()           -> NAT()
+  sortref-to-type(|sort*): Int()           -> INT()
+  sortref-to-type(|sort*): Real()          -> REAL()
+  sortref-to-type(|sort*): List(S)         -> LIST(<sortref-to-type(|sort*)> S)
+  sortref-to-type(|sort*): Set(S)          -> SET(<sortref-to-type(|sort*)> S)
+  sortref-to-type(|sort*): Bag(S)          -> BAG(<sortref-to-type(|sort*)> S)
+  sortref-to-type(|sort*): SortRef(x)      -> <lookup> (x, sort*)
+  sortref-to-type(|sort*): Function(S*, S) -> FUNCTION(<sortrefs-to-types(|sort*)> S*, <sortref-to-type(|sort*)> S)
+
+  sortrefs-to-types(|sort*) = map(sortref-to-type(|sort*))

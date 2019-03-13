@@ -1,0 +1,364 @@
+module analysis
+
+imports
+
+  libspoofax/term/annotation
+
+  desugar
+  pp
+  signatures/-
+  statics/-
+  statics/declarative/-
+  statics/constraints/-
+
+signature
+  constructors
+    Type : Scheme -> Annotation
+    Ref  : Term -> Annotation
+
+rules // Logging
+
+  log-debug =
+    if not(is-string) then write-to-string end
+  ; indent-text(|3)
+  ; debug
+
+  log-info           = id//log-debug
+  log-info(|msg)     = id//with(info-msg(|msg));log-debug
+  log-info-msg(|msg) = id//with(info-msg(|msg))
+
+  log-warn           = log-debug
+  log-warn(|msg)     = with(warn-msg(|msg));log-debug
+  log-warn-msg(|msg) = with(warn-msg(|msg))
+
+  log-err           = log-debug
+  log-err(|msg)     = with(err-msg(|msg));log-debug
+  log-err-msg(|msg) = with(err-msg(|msg))
+
+rules // Analysis
+
+  toplevel-infer-expr(gc,prune|sort*, map*, var*) =
+    infer-expr(gc,prune|sort*, map*, var*, [], <init-constraint-store>)
+
+  infer-expr(gc,prune|sort*, map*, var*, ctx, C) =
+    infer-expr-x(prune|sort*, map*, var*, ctx)
+//    infer-expr-c(map(gc);prune|sort*, map*, var*, ctx, C)
+
+  gc    = gc-typing
+  prune = prune-typings
+
+rules // Analysis
+
+  editor-analyze:
+      (spec, path, project-path) -> (spec, [], [], [])
+    where
+      [_|_] := <collect(?amb(_))> spec
+
+  editor-analyze:
+      (spec, path, project-path) -> (spec'', error*, warning*, info*)
+    where
+      [] := <collect(?amb(_))> spec
+    with
+      spec'@Spec(decls, vars, expr*) := <desugar-all> spec
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; sort-error* := <check-sorts(|sort*)> spec'
+    where
+      expr-result* := <map(editor-analyze-expr(|sort*, map*, var*))> expr*
+    with
+      expr'* := <map(?(<id>, _, _))> expr-result*
+    ; expr-error* := <mapconcat(?(_, <id>, _))> expr-result*
+    ; expr-warning* := <mapconcat(?(_, _, <id>))> expr-result*
+    ; spec'' := Spec(decls, vars, expr'*)
+    ; error*   := [expr-error*, sort-error*]
+    ; warning* := [expr-warning*]
+    ; info*    := []
+
+  editor-analyze-expr(|sort*, map*, var*): e -> (e', error*, warning*)
+    where
+//      D* := <with-counter(analyze-expr(|sort*, map*, var*))> e
+      D* := <with-counter(analyze-and-verify-expr(|sort*, map*, var*))> e
+    < V* := <collect-all(is-var)> D*
+    ; Vstr := <map(pp-Type-string);separate-by(|", ");concat-strings> V*
+    ; switch !D*
+        case has-errors:
+          e' := e
+        ; error* := <get-errors> D*
+        ; warning* := []
+        case ?[]:
+          e' := e
+        ; error* := [(e, "Type error(s)")]
+        ; warning* := []
+        case ?[D(_, e', _, _)]:
+          error* := []
+        ; if [] := V* then
+            warning* := []
+          else
+            warning* := [(e, $[Uninstantiated type variables [Vstr]])]
+          end
+        case ?[_,_|_]:
+          e' := e
+        ; if [] := V* then
+            error* := [(e, "Ambiguous typing")]
+          ; warning* := []
+          else
+            error* := [(e, $[Cannot disambiguate (uninstantiate type variables [Vstr])])]
+          ; warning* := []
+          end
+        otherwise:
+          fatal-err(|"Unexpected result")
+      end
+    + log-err-msg(|"**************************************")
+    ; log-err-msg(|"* Algorithm produced unsound results *")
+    ; log-err-msg(|"**************************************")
+    ; e'       := e
+    ; error*   := [(e, "Algorithm produced unsound results")]
+    ; warning* := []
+    ; fail
+
+  // @type Expr -> M([D])
+  analyze-expr(|sort*, map*, var*): e -> Dmin*
+    with
+      DC*   := <with-counter(toplevel-infer-expr(gc,prune-typings|sort*, map*, var*))> e
+    ; if <has-errors> DC* then
+        Dmin* := DC*
+      else
+        D*    := <map(toplevel-gc-typing;erase-typing-schemes)> DC*
+      ; Dmin* := <toplevel-minimal-typings> D*
+      end
+
+  // @type Expr -> M([D])
+  analyze-and-verify-expr(|sort*, map*, var*): e -> Dmin*
+    where
+      log-info-msg(|"Checking expression")
+    ; DC* := <with-counter( toplevel-infer-expr(gc,prune-typings|sort*, map*, var*)
+                          ; with(pruned-count := <GetCount>)
+                          )> e
+    ; DCall* := <with-counter( toplevel-infer-expr(gc,id|sort*, map*, var*)
+                             ; with(total-count := <GetCount>)
+                             )> e
+    ; if <has-errors> DC* then
+        if <not(has-errors)> DCall* then
+          log-err(|"Pruning introduces errors")
+        ; fail
+        else
+          Dmin* := DC*
+        end
+      else
+        log-info-msg(|"Checked expression")
+      ; log-info-msg(|"Instantiating typing & erasing typing schemes")
+      ; D* := <map(toplevel-gc-typing;erase-typing-schemes)> DC*
+      ; log-info-msg(|"Partitioning typing")
+      ; (Dmin*, Dmax*) := <toplevel-partition-typings> D*
+      ; log-info-msg(|"Minimal typings")
+      ; <map(pp-Typing-string;log-info)> Dmin*
+      ; log-info-msg(|"Non-minimal typings")
+      ; <map(pp-Typing-string;log-info)> Dmax*
+      ; V* := <collect-all(is-var)> D*
+      ; if [] := V* then
+          ( log-info-msg(|"Verifying correctness of derivations")
+          ; <verify-correctness(|sort*, map*, var*)> D*
+          ; log-info-msg(|"Verified correctness of derivations")
+         <+ fail
+          )
+        ; ( log-info-msg(|"Verifying minimality of derivations")
+          ; Dall*  := <map(toplevel-gc-typing;erase-typing-schemes)> DCall*
+          ; <verify-minimality> (Dmin*, Dall*)
+          ; log-info-msg(|"Verified minimality of derivations")
+         <+ fail
+          )
+        else
+          <map(pp-Type-string);log-warn(|"Derivations contain variables, cannot verify.")> V*
+        ; <map(pp-Typing-string;log-warn)> D*
+        end
+      ; log-info-msg(|$[Work [<int-to-string> pruned-count]/[<int-to-string> total-count] (with/without pruning)])
+      end 
+
+  verify-correctness(|sort*, map*, var*): D* -> <id>
+    where
+      Dincorrect* := <filter(not(toplevel-check-typing(|sort*, map*, var*)))> D*
+    ; if [_|_] := Dincorrect* then
+        <map(\ D -> ()
+                 where
+                   <pp-Typing-string;log-err(|"Invalid typing")> D
+            \)> Dincorrect*
+      ; fail
+      end
+
+  verify-minimality: (Dmin*, Dall*) -> <id>
+    with
+      (Damin*, Damax*) := <toplevel-partition-typings> Dall*
+    where
+      // any Dmin for which a D' exists such that D' < Dmin
+        Dhassmaller* := <filter(\ Dmin -> <filter(\ D' -> (Dmin, D') where <lt-typing> (D', Dmin) \)> Dall* \);concat> Dmin*
+      ; if [_|_] := Dhassmaller* then
+          <map(\ (Dmin, D) -> ()
+                   where
+                     <pp-Typing-string;log-err(|"Non-minimal typing")> D
+                   ; <pp-Typing-string;log-err(|"smaller than minimal typing")> Dmin
+              \)> Dhassmaller*
+        ; fail
+        end
+      // any Dmax' such that no Dmin exists such that Dmin < Dmax'
+      ; Dnosmaller* := <filter(\ Dmax' -> Dmax' where <filter(\ Dmin -> <lt-typing> (Dmin, Dmax') \);?[]> Dmin* \)> Damax*
+      ; if [_|_] := Dnosmaller* then
+          <map(\ Dmax -> ()
+                   where
+                     <pp-Typing-string;log-err(|"Non-minimal typing")> Dmax
+                   ; log-err-msg(|"has no smaller minimal typing")
+              \)> Dnosmaller*
+        ; fail
+        end
+
+rules // Editor services
+
+  editor-resolve:
+      (_, _, ast, _, _) -> x
+    where
+      x := <get-ast-ref> ast
+
+  editor-hover:
+      (_, _, ast, _, _) -> msg
+    where
+      T := <get-ast-type> ast
+    ; msg := <pp-Type-string> T
+
+rules // Debugging
+
+  debug-show-analyzed:
+    (_, _, ast, path, _) -> (filename, result)
+    with
+      filename := <guarantee-extension(|"analyzed.aterm")> path;
+      result   := ast
+
+  debug-show-typed:
+      (_, _, spec, path, _) -> (filename, result)
+    with
+      spec'@Spec(_, _, e*) := <desugar-all> spec
+    ; filename := <guarantee-extension(|"typing.txt")> path
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; D* := <map(debug-get-typing(|sort*, map*, var*);try(summarize-typing))> e*
+    ; result := <map(pp-Typing-string);separate-by(|"\n");concat-strings> D*
+
+  debug-show-typing:
+      (_, _, spec, path, _) -> (filename, result)
+    with
+      spec'@Spec(_, _, e*) := <desugar-all> spec
+    ; filename := <guarantee-extension(|"typing.txt")> path
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; D* := <map(debug-get-typing(|sort*, map*, var*))> e*
+    ; result := <map(pp-Typing-string);separate-by(|"\n");concat-strings> D*
+
+  debug-get-typing(|sort*, map*, var*):
+      e -> result
+    with
+      D* := <with-counter(toplevel-infer-expr(gc,prune-typings|sort*, map*, var*))> e
+    ; D'* := <map(toplevel-gc-typing;erase-typing-schemes);prune-typings> D*
+    ; switch !D'*
+        case ?[] + has-errors:
+          result := Erroneous(e)
+        case ?[D]:
+          result := D
+        otherwise:
+          result := Ambiguous(e)
+      end
+
+  debug-show-minimal-typings:
+      (_, _, spec, path, _) -> (filename, result)
+    with
+      spec'@Spec(_, _, expr) := <desugar-all> spec
+    ; filename := <guarantee-extension(|"minimal-typings.txt")> path
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; ( [_,_|_] := expr
+      ; result := "(can only show minimal typings for a single data expression)"
+     <+ [e] := expr
+      ; D* := <with-counter(toplevel-infer-expr(gc,prune-typings|sort*, map*, var*))> e
+      ; switch !D*
+          case ?[] + has-errors:
+            result := "(data expression has errors)"
+          otherwise:
+            (Dmin*, _) := <map(toplevel-gc-typing;erase-typing-schemes);toplevel-partition-typings> D*
+          ; result := <pp-MinimalTypings-string> Dmin*
+        end
+     <+ result := "(no expression)"
+      )
+
+  debug-show-all-typings:
+    (_, _, spec, path, _) -> (filename, result)
+    with
+      spec'@Spec(_, _, expr) := <desugar-all> spec
+    ; filename := <guarantee-extension(|"all-typings.txt")> path
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; ( [_,_|_] := expr
+      ; result := "(can only show all typings for a single data expression)"
+     <+ [e] := expr
+      ; D* := <with-counter(toplevel-infer-expr(gc,prune-typings|sort*, map*, var*))> e
+      ; switch !D*
+          case ?[] + has-errors:
+            result := "(expression has errors)"
+          otherwise:
+            (Dmin*, D'*) := <map(toplevel-gc-typing;erase-typing-schemes);toplevel-partition-typings> D*
+          ; result := <pp-AllTypings-string> (D'*, Dmin*)
+        end
+     <+ result := "(no expression)"
+      )
+
+
+  debug-show-derivations =
+    debug-show-derivations(id|"constraints")
+
+  debug-show-pruned-derivations =
+    debug-show-derivations(prune-typings|"constraints-pruned")
+
+  debug-show-derivations(prune|name):
+    (_, _, spec, path, _) -> (filename, result)
+    with
+      spec'@Spec(_, _, expr) := <desugar-all> spec
+    ; filename := <guarantee-extension(|$[derivations.[name].txt])> path
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; if [_,_|_] := expr then
+        result := "(can only show derivations for a single data expression)"
+      else if [e] := expr then
+        D* := <with-counter(toplevel-infer-expr(gc,prune|sort*, map*, var*)
+                           ;with(count := <GetCount>))> e
+      ; switch !D*
+          case ?[] + has-errors:
+            result := "(expression has errors)"
+          otherwise:
+            Dmin*  := <map(toplevel-gc-typing;erase-typing-schemes);toplevel-minimal-typings> D*
+          ; result := <pp-Derivations-string> (sort*, map*, var*, count, D*, Dmin*)
+        end
+      else
+        result := "(no expression)"
+      end end
+
+  debug-show-constraintgraph:
+      (_, _, spec, path, _) -> (filename, result)
+    with
+      spec'@Spec(_, _, e*) := <desugar-all> spec
+    ; filename := <guarantee-extension(|"dot")> path
+    ; (sort*, map*, var*) := <build-env> spec'
+    ; if [] := e* then
+        result := "// no expression"
+      else if [e] := e* then
+        DC* := <with-counter(toplevel-infer-expr(id,id|sort*, map*, var*)
+                            ;with(count := <GetCount>))> e
+      ; switch !DC*
+          case ?[] + has-errors:
+            result := "// expression has errors"
+          case ?[DC]:
+            DC-result := <pp-Typing-string;prefix-lines(|"// ")> DC
+          ; G-result := <get-typing-constraints;get-constraints;pp-ConstraintGraph-string> DC
+          ; D := <toplevel-gc-typing;erase-typing-schemes> DC
+          ; D-result := <pp-Typing-string;prefix-lines(|"// ")> D
+          ; result := <separate-by(|"\n\n");concat-strings> [
+              $[// [path]]
+            , D-result
+            , DC-result
+            , G-result
+            ]
+          otherwise:
+            result := "// cannot show constraints for multiple data expression derivations"
+        end
+      else
+        result := "// cannot show constraints for multiple data expression"
+      end end

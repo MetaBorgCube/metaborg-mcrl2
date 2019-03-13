@@ -1,0 +1,18 @@
+module mcrl2typecheck
+
+imports
+
+  Layout
+  mcrl2/Common
+  mcrl2/Reserved
+  mcrl2/Data
+  mcrl2/Sort
+  Spec
+
+context-free start-symbols
+  
+  Start
+
+context-free syntax
+
+  Start = Spec

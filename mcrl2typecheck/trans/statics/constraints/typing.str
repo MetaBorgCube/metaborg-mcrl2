@@ -1,0 +1,37 @@
+module statics/constraints/typing
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+  statics/constraints/-
+
+rules
+
+  get-typing-ctx: DC(ctx, _, _, _, _) -> ctx
+
+  get-typing-expr: DC(_, e, _, _, _) -> e
+
+  get-typing-type: DC(_, _, T, _, _) -> T
+
+  get-typing-constraints: DC(_, _, _, C, _) -> C
+
+  get-typing-constraints: D(_, _, _, _) -> <init-constraint-store>
+
+  get-typing-ev: DC(_, _, _, _, E) -> E
+
+  drop-typing-ev = DC(id, id, id, id, !NoEvidence())
+
+  drop-typing-ev = D(id, id, id, id)
+
+  erase-typing-schemes: D(ctx, e, T, E) -> D(ctx, e, T, E)
+
+  erase-typing-schemes: DC(ctx, e, T, C, E) -> D(ctx, e, T, E')
+    with
+      E' := <try(sometd(erase-typing-schemes))> E
+
+  summarize-typing: D(_, e, T, _) -> Typed(e, T)
+
+  summarize-typing: DC(_, e, T, _, _) -> Typed(e, T)

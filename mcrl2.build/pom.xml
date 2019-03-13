@@ -10,11 +10,48 @@
   <packaging>pom</packaging>
 
   <modules>
+    <!-- mCRL2 -->
     <module>../mcrl2</module>
     <module>../mcrl2.eclipse</module>
     <module>../mcrl2.eclipse.feature</module>
     <module>../mcrl2.eclipse.site</module>
+    <!-- mCRL2Typecheck -->
+    <module>../mcrl2typecheck</module>
+    <module>../mcrl2typecheck.test</module>
+    <module>../mcrl2typecheck.cli</module>
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <artifactItems>
+            <artifactItem>
+              <groupId>org.metaborg</groupId>
+              <artifactId>mcrl2typecheck.cli</artifactId>
+              <version>${project.version}</version>
+              <type>jar</type>
+              <overWrite>true</overWrite>
+              <outputDirectory>${project.basedir}</outputDirectory>
+              <destFileName>mcrl2typecheck.jar</destFileName>
+            </artifactItem>
+          </artifactItems>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
   <repositories>
     <repository>

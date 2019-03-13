@@ -1,0 +1,53 @@
+module Spec
+
+imports
+  
+  mcrl2/Common
+  mcrl2/Sort
+  mcrl2/Data
+
+context-free syntax
+
+  Spec.Spec = <
+    <DataDecls>
+
+    <DataVars>
+
+    <DataExprs>
+
+  >
+
+context-free syntax
+
+  DataDecls = {ast("[]")}
+  DataDecls = <
+    data_specification
+      <{DataSpec "\n"}*>
+  >
+
+  DataSpec.SortSpec = <sort <{SortDecl " "}+>>
+  DataSpec.MapSpec  = <map <{MCRL2-ID ", "}+> : <MCRL2-SortExpr>;>
+
+  SortDecl.SortDecl  = <<{MCRL2-ID ", "}+>;>
+  SortDecl.SortAlias = <<MCRL2-ID> = <MCRL2-SortExpr>;>
+
+context-free syntax
+
+  DataVars = {ast("[]")}
+  DataVars = <
+    data_variables
+      <{MCRL2-VarsDecl "\n"}*>
+  >
+
+context-free syntax
+
+  DataExprs = {ast("[]")}
+  DataExprs = <
+    data_expressions
+      <es:{DataExprs-Expr "\n"}*>
+  > {layout(align-list es)}
+  DataExprs-Expr = <<e:MCRL2-DataExpr>> {layout(offside e)}
+
+lexical syntax
+
+  MCRL2-Reserved = "data_specification" | "data_variables" | "data_expressions"

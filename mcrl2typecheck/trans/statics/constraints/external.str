@@ -1,0 +1,53 @@
+module statics/constraints/external
+
+rules
+
+  /**
+   * @type _ -> Store
+   */
+  external init-constraint-store(|)
+
+  /**
+   * Add a subtype fact to the constraint store. Fails if the store becomes
+   * inconsistent.
+   *
+   * @param isVar : Term -> Term
+   * @param subtype : (Term * Term) -> List(Term * Term)
+   * @param lub : (Term * Term) -> (Term * List(Term * Term))
+   * @param glb : (Term * Term) -> (Term * List(Term * Term))
+   * @param store : Store
+   * @param pp : Type -> String
+   * @type (Type * Type) -> Store
+   */
+  external tell-constraint-store(isVar,subtype,glb,lub,pp|store)
+
+  /**
+   * @param isVar : Term -> Term
+   * @param subtype : (Term * Term) -> List(Term * Term)
+   * @param lub : (Term * Term) -> (Term * List(Term * Term))
+   * @param glb : (Term * Term) -> (Term * List(Term * Term))
+   * @param pp : Type -> String
+   * @type (Store * Store) -> Store
+   */
+  external merge-constraint-stores(isVar,subtype,glb,lub,pp|)
+
+  /**
+   * @type Store -> List((Type * Type))
+   */
+  external get-constraints(|)
+
+  /**
+   * @param all-vars : Type -> List(Var)
+   * @param polarity : Var -> Var
+   * @param pp : Type -> String
+   * @type Store -> (Store, sbs:List(Var * Type))
+   */
+  external gc-constraint-store(all-vars,polarity,substitute,pp|vars)
+
+  /**
+   * @param pos-vars : List(Var)
+   * @param neg-vars : List(Var)
+   * @param pp : Type -> String
+   * @type Store -> (pos:List(Var) * neg:List(Var))
+   */
+  external compute-polarities(pos-vars,neg-vars|pos-vars,neg-vars)

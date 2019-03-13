@@ -1,0 +1,31 @@
+---
+id: org.metaborg:mcrl2typecheck:0.1.0-SNAPSHOT
+name: mcrl2typecheck
+dependencies:
+  compile:
+  - org.metaborg:org.metaborg.meta.lang.esv:${metaborgVersion}
+  - org.metaborg:org.metaborg.meta.lang.template:${metaborgVersion}
+  source:
+  - org.metaborg:meta.lib.spoofax:${metaborgVersion}
+  - org.metaborg:mcrl2:0.1.0-SNAPSHOT
+language:
+  sdf:
+    pretty-print: mcrl2
+    sdf2table: java
+  stratego:
+    format: ctree
+    args:
+    - -la
+    - stratego-lib
+    - -la
+    - stratego-sglr
+    - -la
+    - stratego-gpp
+    - -la
+    - stratego-xtc
+    - -la
+    - stratego-aterm
+    - -la
+    - stratego-sdf
+    - -la
+    - strc
