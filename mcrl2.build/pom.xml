@@ -21,6 +21,11 @@
     <module>../mcrl2typecheck.cli</module>
   </modules>
 
+  <properties>
+    <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
+    <timestamp>${maven.build.timestamp}</timestamp>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -29,7 +34,7 @@
         <version>3.1.1</version>
         <executions>
           <execution>
-            <id>copy</id>
+            <id>mcrl2typecheck-jar</id>
             <phase>package</phase>
             <goals>
               <goal>copy</goal>
@@ -45,7 +50,7 @@
               <type>jar</type>
               <overWrite>true</overWrite>
               <outputDirectory>${project.basedir}</outputDirectory>
-              <destFileName>mcrl2typecheck.jar</destFileName>
+              <destFileName>mcrl2typecheck-v${project.version}+${timestamp}.jar</destFileName>
             </artifactItem>
           </artifactItems>
         </configuration>
