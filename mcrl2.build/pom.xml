@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
->
-  <modelVersion>4.0.0</modelVersion>
-  <artifactId>mcrl2</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
-  <packaging>spoofax-language</packaging>
+  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-  <parent>
-    <groupId>org.metaborg</groupId>
-    <artifactId>parent.language</artifactId>
-    <version>2.6.0-SNAPSHOT</version>
-  </parent>
-  
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.metaborg</groupId>
+  <artifactId>mcrl2.build</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>../mcrl2</module>
+    <module>../mcrl2.eclipse</module>
+    <module>../mcrl2.eclipse.feature</module>
+    <module>../mcrl2.eclipse.site</module>
+  </modules>
+
   <repositories>
     <repository>
       <id>metaborg-release-repo</id>
-      <url>https://artifacts.metaborg.org/content/repositories/releases/</url>
+      <url>http://artifacts.metaborg.org/content/repositories/releases/</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -28,7 +29,7 @@
     </repository>
     <repository>
       <id>metaborg-snapshot-repo</id>
-      <url>https://artifacts.metaborg.org/content/repositories/snapshots/</url>
+      <url>http://artifacts.metaborg.org/content/repositories/snapshots/</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -36,12 +37,23 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>spoofax-eclipse-repo</id>
+      <url>http://download.spoofax.org/update/nightly/</url>
+      <layout>p2</layout>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
-  
+
   <pluginRepositories>
     <pluginRepository>
       <id>metaborg-release-repo</id>
-      <url>https://artifacts.metaborg.org/content/repositories/releases/</url>
+      <url>http://artifacts.metaborg.org/content/repositories/releases/</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -51,7 +63,7 @@
     </pluginRepository>
     <pluginRepository>
       <id>metaborg-snapshot-repo</id>
-      <url>https://artifacts.metaborg.org/content/repositories/snapshots/</url>
+      <url>http://artifacts.metaborg.org/content/repositories/snapshots/</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -60,4 +72,5 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
+
 </project>

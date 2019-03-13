@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/mcrl2.eclipse.feature_0.1.0.qualifier.jar" id="mcrl2.eclipse.feature" version="0.1.0.qualifier">
+      <category name="mCRL2"/>
+   </feature>
+   <category-def name="mCRL2" label="mCRL2 language Eclipse plugin">
+      <description>
+         mCRL2 language Eclipse plugin.
+      </description>
+   </category-def>
+</site>
