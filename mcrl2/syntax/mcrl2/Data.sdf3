@@ -4,7 +4,6 @@ imports
 
   mcrl2/Common
   mcrl2/Sort
-  mcrl2/Proc
 
 template options
 

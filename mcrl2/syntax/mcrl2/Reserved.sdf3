@@ -41,7 +41,7 @@ lexical syntax
   MCRL2-Reserved = "forall"
   MCRL2-Reserved = "glob"
   MCRL2-Reserved = "hide"
-  MCRL2-Reserved = "if"
+//MCRL2-Reserved = "if"
   MCRL2-Reserved = "in"
   MCRL2-Reserved = "init"
   MCRL2-Reserved = "lambda"
