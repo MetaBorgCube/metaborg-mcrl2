@@ -6,8 +6,4 @@
 /.settings
 /.factorypath
 
-*.constraints
-*.scope-graph
-*.name-resolution
-*.unifier
-*.symbolic
+/.polyglot.metaborg.yaml

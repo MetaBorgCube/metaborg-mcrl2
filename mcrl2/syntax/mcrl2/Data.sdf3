@@ -4,7 +4,6 @@ imports
 
   mcrl2/Common
   mcrl2/Sort
-  mcrl2/Proc
 
 template options
 
@@ -62,12 +61,6 @@ context-free syntax //--- Data expressions
   MCRL2-Assignment.Assign = <<MCRL2-ID> = <MCRL2-DataExpr>>
 
   MCRL2-BagEnumElt.BagEnumElt = <<MCRL2-DataExpr> : <MCRL2-DataExpr>>
-
-lexical syntax
-
-  Keyword = "true" | "false" | "forall" | "exists" | "lambda" | "in" | "div" | "mod" | "whr" | "end"
-
-  ID = Keyword {reject}
 
 context-free priorities
 

@@ -8,7 +8,72 @@ imports
   pp/mcrl2/-
   pp/mcrl2-parenthesize
 
+rules //--- Data expressions
+
+  mcrl2Parenthesize :
+    As(t, se) -> As(t', se)
+    where < ?ForAll(_, _)
+          + ?Exists(_, _)
+          + ?Lambda(_, _)
+          + ?Impl(_, _)
+          + ?Conj(_, _)
+          + ?Disj(_, _)
+          + ?Equal(_, _)
+          + ?Inequal(_, _)
+          + ?Smaller(_, _)
+          + ?SmallerOrEqual(_, _)
+          + ?LargerOrEqual(_, _)
+          + ?Larger(_, _)
+          + ?Member(_, _)
+          + ?ListCons(_, _)
+          + ?ListSnoc(_, _)
+          + ?ListConc(_, _)
+          + ?Add_SetBagUnion(_, _)
+          + ?Sub_SetBagDiff(_, _)
+          + ?Div(_, _)
+          + ?IntDiv(_, _)
+          + ?IntMod(_, _)
+          + ?Mul_SetBagIsect(_, _)
+          + ?EltAt(_, _)
+          + ?Where(_, _)
+          > := t
+        ; t' := Parenthetical(t)
+
+  mcrl2Parenthesize :
+    FunApp(t, ts) -> FunApp(t', ts)
+    where < ?ForAll(_, _)
+          + ?Exists(_, _)
+          + ?Lambda(_, _)
+          + ?Impl(_, _)
+          + ?Conj(_, _)
+          + ?Disj(_, _)
+          + ?Equal(_, _)
+          + ?Inequal(_, _)
+          + ?Smaller(_, _)
+          + ?SmallerOrEqual(_, _)
+          + ?LargerOrEqual(_, _)
+          + ?Larger(_, _)
+          + ?Member(_, _)
+          + ?ListCons(_, _)
+          + ?ListSnoc(_, _)
+          + ?ListConc(_, _)
+          + ?Add_SetBagUnion(_, _)
+          + ?Sub_SetBagDiff(_, _)
+          + ?Div(_, _)
+          + ?IntDiv(_, _)
+          + ?IntMod(_, _)
+          + ?Mul_SetBagIsect(_, _)
+          + ?EltAt(_, _)
+          + ?Where(_, _)
+          > := t
+        ; t' := Parenthetical(t)
+
 rules //--- Sort expressions and sort declarations
+
+  mcrl2typecheckParenthesize :
+    Function(ts, t) -> Function(ts', t)
+    where [_|_] := <filter(?Function(_, _))> ts
+        ; ts' := <map(try(?Function(_, _); !Parenthetical(<id>)))> ts
 
   mcrl2Parenthesize :
     Product((t, ts)) -> Product((Parenthetical(t), ts))

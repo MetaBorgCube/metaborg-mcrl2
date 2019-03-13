@@ -6,7 +6,7 @@ imports
   libspoofax/sdf/pp
   pp/mcrl2/-
   pp/mcrl2-parenthesize
-  mcrl2/syntax/parenthesize
+  mcrl2/syntax/-
 
 rules
 
@@ -23,7 +23,8 @@ rules
     pp-mcrl2-string(pp-H-list(prettyprint-mcrl2|", "))
 
   pp-mcrl2-string(pp) =
-    parenthesize-mcrl2
+    mcrl2-resugar-all
+  ; parenthesize-mcrl2
   ; pp
   ; !V([], <id>)
   ; box2text-string(|120)
