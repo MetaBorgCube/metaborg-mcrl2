@@ -21,12 +21,12 @@ rules
       ctx' := <get-typing-ctx> D
     where
       <eq> (ctx, ctx')
-   <+ <pp-Context-string;log-err(|"Expected context")> ctx
-    ; <pp-Context-string;log-err(|"Derivation context")> ctx'
-    ; <pp-Typing-string;log-err(|"Context mismatch at");fail> D
+   <+ <log-err(pp-Context-string|"Expected context")> ctx
+    ; <log-err(pp-Context-string|"Derivation context")> ctx'
+    ; <log-err(pp-Typing-string|"Context mismatch at");fail> D
     where
       <check-typing'(|sort*, map*, var*, ctx)> D
-   <+ <pp-Typing-string;log-err(|"Typing failed at");fail> D
+   <+ <log-err(pp-Typing-string|"Typing failed at");fail> D
 
 rules
 

@@ -21,11 +21,11 @@ rules
   // @type e -> M([D])
   infer-expr-x(prune|sort*, map*, var*, ctx): e -> D'*
     with
-      <pp-DataExpr-string;log-info(|"checking ")> e
+      <log-info(pp-DataExpr-string|"checking ")> e
     ; D* := <infer-expr-x'(prune|sort*, map*, var*, ctx);or-error(|e, "Type error")> e
     ; D'* := <fmap(prune;or-error(|e, "Pruning error"))> D*
-    ; <fmap(map(pp-Typing-string;log-info))> D'*
-    ; <pp-DataExpr-string;log-info(|"checked ")> e
+    ; <fmap(log-info(pp-Typing-string|"found derivations"))> D'*
+    ; <log-info(pp-DataExpr-string|"checked ")> e
     with <fmap(length;AddCount)> D*
 
 rules

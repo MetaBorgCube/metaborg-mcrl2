@@ -10,6 +10,8 @@ imports
   statics/constraints/-
   pp
 
+/*
+
 rules
 
   toplevel-infer-expr-c(prune|sort*, map*, var*): e -> D*
@@ -367,3 +369,4 @@ rules
   apply-scheme-c(|C): T -> (T, C)
     where not(FORALL(_, _) := T)
 
+*/

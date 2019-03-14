@@ -68,6 +68,27 @@ rules
   ; s
   |}
 
+rules // Logging
+
+  log-level = fail // !Error(), !Warning(), !Info()
+
+  is-info-enabled = where(log-level => Info())
+  is-warn-enabled = where(log-level => Warning()) <+ is-info-enabled
+  is-err-enabled  = where(log-level => Error()) <+ is-warn-enabled
+
+  log-debug(pp) =
+    (is-list <+ MkSingleton)
+  ; map(debug;pp;indent-text(|3);debug)
+
+  log-info(pp|msg)   = with(is-info-enabled<info-msg(|msg);log-debug(pp)+id)
+  log-info-msg(|msg) = with(is-info-enabled<info-msg(|msg)+id)
+
+  log-warn(pp|msg)   = with(is-warn-enabled<warn-msg(|msg);log-debug(pp)+id)
+  log-warn-msg(|msg) = with(is-warn-enabled<warn-msg(|msg)+id)
+
+  log-err(pp|msg)   = with(is-err-enabled<err-msg(|msg);log-debug(pp)+id)
+  log-err-msg(|msg) = with(is-err-enabled<err-msg(|msg)+id)
+
 rules
 
   info-msg(|msg : String) =
