@@ -22,8 +22,8 @@ rules
   infer-expr-x(prune|sort*, map*, var*, ctx): e -> D'*
     with
       <pp-DataExpr-string;log-info(|"checking ")> e
-    ; D* := <infer-expr-x'(prune|sort*, map*, var*, ctx)> e
-    ; D'* := <fmap(prune;or-error(|e, "Type error"))> D*
+    ; D* := <infer-expr-x'(prune|sort*, map*, var*, ctx);or-error(|e, "Type error")> e
+    ; D'* := <fmap(prune;or-error(|e, "Pruning error"))> D*
     ; <fmap(map(pp-Typing-string;log-info))> D'*
     ; <pp-DataExpr-string;log-info(|"checked ")> e
     with <fmap(length;AddCount)> D*
@@ -104,7 +104,7 @@ rules
   // @type e -> M([D])
   infer-expr-x'(prune|sort*, map*, var*, ctx): e@ListEnum(e*) -> <or-error(|e, "Incompatible item types")> D*
     with
-      Ds* := <map(infer-expr-x(prune|sort*, map*, var*, ctx);fmap(prune));fjoin(list-cart)> e*
+      Ds* := <map(infer-expr-x(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e*
     ; D* := <fmap(filter(infer-listenum-x(|ctx)))> Ds*
 
   // @type [D] ~> D
@@ -127,8 +127,8 @@ rules
   // @type elt -> M([D])
   infer-bagenum-x-elt(prune|sort*, map*, var*, ctx): BagEnumElt(e1, e2) -> Delt*
     with
-      D1* := <infer-expr-x(prune|sort*, map*, var*, ctx);fmap(prune)> e1
-    ; D2* := <infer-expr-x(prune|sort*, map*, var*, ctx);fmap(prune)> e2
+      D1* := <infer-expr-x(prune|sort*, map*, var*, ctx)> e1
+    ; D2* := <infer-expr-x(prune|sort*, map*, var*, ctx)> e2
     ; Delt* := <fjoin(cart(id))> (D1*, D2*)
 
   // @type [D] ~> D
@@ -180,7 +180,7 @@ rules
   // @type e -> M([D])
   infer-expr-x'(prune|sort*, map*, var*, ctx): e@SetEnum(e*) -> <or-error(|e, "Wrong item types")> D*
     with
-      Ds* := <map(infer-expr-x(prune|sort*, map*, var*, ctx);fmap(prune));fjoin(list-cart)> e*
+      Ds* := <map(infer-expr-x(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e*
     ; D* := <fmap(filter(infer-setenum-x(|ctx)))> Ds*
 
   // @type [D] ~> D
@@ -199,7 +199,7 @@ rules
     where
       yT1* := <stdlib;getsome(where(?(x, _)))>
     with
-      D2s* := <map(infer-expr-x(prune|sort*, map*, var*, ctx);fmap(prune));fjoin(list-cart)> e*
+      D2s* := <map(infer-expr-x(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e*
     ; D* := <fjoin(join(infer-op-x(|ctx, e1)))> (yT1*, D2s*)
 
   // @type ((ID * Type) * [D]) ~> D
@@ -217,7 +217,7 @@ rules
   infer-expr-x'(prune|sort*, map*, var*, ctx): e@FunApp(e1, e2*) -> <or-error(|e, "No matching functions/arguments")> D*
     with
       D1* := <infer-expr-x(prune|sort*, map*, var*, ctx)> e1
-    ; D2s* := <map(infer-expr-x(prune|sort*, map*, var*, ctx);fmap(prune));fjoin(list-cart)> e2*
+    ; D2s* := <map(infer-expr-x(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e2*
     ; D* := <fjoin(join(infer-app-x(|ctx)))> (D1*, D2s*)
 
   // @type (D, [D]) ~> D
