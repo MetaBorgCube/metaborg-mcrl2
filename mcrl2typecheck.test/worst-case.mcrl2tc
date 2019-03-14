@@ -1,0 +1,10 @@
+%% Worst case : exponential number of derivations
+
+data_specification
+  map f : Nat # Nat -> Nat;
+  map f : Real # Real -> Nat;
+
+data_expressions
+  f(0,0)
+%  f(f(0,0),f(0,0))
+%  f(f(f(0,0),f(0,0)),f(f(0,0),f(0,0)))
