@@ -171,8 +171,6 @@ context-free syntax
 
 context-free syntax
 
-  ConstraintStore.C = <{ <{Subtype "; "}*> }>
-
   ConstraintGraph = <
     digraph {
       rankdir=BT;

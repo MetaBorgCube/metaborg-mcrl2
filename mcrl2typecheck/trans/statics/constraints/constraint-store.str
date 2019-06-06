@@ -1,21 +1,26 @@
-module statics/constraints/external
+module statics/constraints/constraint-store
 
-signature
-  constructors
-    C : List(Term, Term) -> C
+imports
+
+  statics/subtyping
 
 rules
 
-  init-constraint-store: _ -> C([])
+  merge-constraint-stores =
+    merge-constraint-stores(is-var)
 
-  merge-constraint-stores: C* -> C(c*)
-    with c* := <mapconcat(?C(<id>))> C*
+  tell-constraint-store(|C) =
+    tell-constraint-store(is-var|C)
 
-  tell-constraint-store(|C): c* -> C(<conc> (c*, c'*))
-    with C(c'*) := C
+rules
 
-  prettyprint-mcrl2-ConstraintStore =
-    fail
+  external init-constraint-store(|)
+
+  external merge-constraint-stores(is-var|)
+
+  external tell-constraint-store(is-var|C)
+
+  external constraint-store-to-string(pp|)
 
   /**
    * @type _ -> Store
