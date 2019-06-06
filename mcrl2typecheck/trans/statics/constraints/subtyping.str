@@ -125,26 +125,26 @@ rules
 
   top-decompose: LIST(_) -> LIST(V)
     with
-      V := NVAR(<newname> "U")
+      V := PVAR(<newname> "U")
 
   top-decompose: SET(_) -> SET(V)
     with
-      V := NVAR(<newname> "U")
+      V := PVAR(<newname> "U")
 
   top-decompose: BAG(_) -> BAG(V)
     with
-      V := NVAR(<newname> "U")
+      V := PVAR(<newname> "U")
 
   top-decompose: NAMED(x) -> NAMED(x)
 
   top-decompose: FUNCTION(T1*, _) -> FUNCTION(V1*, V2)
     with
       V1* := <map(!NVAR(<newname> "U"))> T1*
-    ; V2  := NVAR(<newname> "U")
+    ; V2  := PVAR(<newname> "U")
 
   top-decompose: PRODUCT(T*) -> PRODUCT(V*)
     with
-      V* := <map(!NVAR(<newname> "U"))> T*
+      V* := <map(!PVAR(<newname> "U"))> T*
 
 rules
 

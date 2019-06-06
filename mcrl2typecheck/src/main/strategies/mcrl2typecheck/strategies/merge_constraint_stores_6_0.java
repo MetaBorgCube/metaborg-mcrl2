@@ -31,7 +31,7 @@ public class merge_constraint_stores_6_0 extends Strategy {
                 ConstraintStore.<IStrategoTerm>of().melt(isVar, sub, glb, lub, bot, top);
         try {
             for(ConstraintStore<IStrategoTerm> store : ConstraintStoreUtils.matchStores(storesTerm)) {
-                constraintStore.addAll(store);
+                constraintStore.addAll(store.getConstraints());
             }
         } catch(ConstraintException ex) {
             return null;

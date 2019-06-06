@@ -1,8 +1,12 @@
 package mcrl2typecheck.strategies;
 
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.metaborg.util.functions.Action1;
 import org.metaborg.util.functions.Function1;
 import org.metaborg.util.functions.PartialFunction1;
 import org.metaborg.util.functions.PartialFunction2;
@@ -10,21 +14,24 @@ import org.metaborg.util.functions.Predicate1;
 import org.metaborg.util.log.ILogger;
 import org.metaborg.util.log.LoggerUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import io.usethesource.capsule.Map;
-import io.usethesource.capsule.SetMultimap;
+import mb.nabl2.util.ImmutableTuple2;
 import mb.nabl2.util.Tuple2;
+import mb.nabl2.util.collections.HashTrieRelation2;
+import mb.nabl2.util.collections.IRelation2;
 
 public class ConstraintStore<T> {
     private static final ILogger logger = LoggerUtils.logger(ConstraintStore.class);
 
     private final Map.Immutable<T, T> lowerBounds;
     private final Map.Immutable<T, T> upperBounds;
-    private final SetMultimap.Immutable<T, T> closure;
+    private final IRelation2.Immutable<T, T> closure;
 
     private ConstraintStore(Map.Immutable<T, T> lowerBounds, Map.Immutable<T, T> upperBounds,
-            SetMultimap.Immutable<T, T> closure) {
+            IRelation2.Immutable<T, T> closure) {
         this.lowerBounds = lowerBounds;
         this.upperBounds = upperBounds;
         this.closure = closure;
@@ -32,6 +39,20 @@ public class ConstraintStore<T> {
 
     public int size() {
         return lowerBounds.size() + upperBounds.size() + closure.size();
+    }
+
+    public List<Tuple2<T, T>> getConstraints() {
+        final ImmutableList.Builder<Tuple2<T, T>> constraints = ImmutableList.builder();
+        for(Map.Entry<T, T> lb : lowerBounds.entrySet()) {
+            constraints.add(ImmutableTuple2.of(lb.getValue(), lb.getKey()));
+        }
+        for(Map.Entry<T, T> ub : upperBounds.entrySet()) {
+            constraints.add(ImmutableTuple2.of(ub.getKey(), ub.getValue()));
+        }
+        for(Map.Entry<T, T> e : closure.entrySet()) {
+            constraints.add(ImmutableTuple2.of(e.getKey(), e.getValue()));
+        }
+        return constraints.build();
     }
 
     public String toString(Function1<T, String> toString) {
@@ -69,19 +90,19 @@ public class ConstraintStore<T> {
     }
 
     public Transient<T> melt(IsVar<T> isVar, Sub<T> sub, Glb<T> glb, Lub<T> lub, Bot<T> bot, Top<T> top) {
-        return new Transient<>(lowerBounds.asTransient(), upperBounds.asTransient(), closure.asTransient(), isVar, sub,
-                glb, lub, bot, top);
+        return new Transient<>(lowerBounds.asTransient(), upperBounds.asTransient(), closure.melt(), isVar, sub, glb,
+                lub, bot, top);
     }
 
     public static <T> ConstraintStore<T> of() {
-        return new ConstraintStore<>(Map.Immutable.of(), Map.Immutable.of(), SetMultimap.Immutable.of());
+        return new ConstraintStore<>(Map.Immutable.of(), Map.Immutable.of(), HashTrieRelation2.Immutable.of());
     }
 
     public static class Transient<T> {
 
         private final Map.Transient<T, T> lowerBounds;
         private final Map.Transient<T, T> upperBounds;
-        private final SetMultimap.Transient<T, T> closure;
+        private final IRelation2.Transient<T, T> closure;
 
         private final IsVar<T> isVar;
         private final Sub<T> sub;
@@ -91,7 +112,7 @@ public class ConstraintStore<T> {
         private final Top<T> top;
 
         public Transient(Map.Transient<T, T> lowerBounds, Map.Transient<T, T> upperBounds,
-                SetMultimap.Transient<T, T> closure, IsVar<T> isVar, Sub<T> sub, Glb<T> glb, Lub<T> lub, Bot<T> bot,
+                IRelation2.Transient<T, T> closure, IsVar<T> isVar, Sub<T> sub, Glb<T> glb, Lub<T> lub, Bot<T> bot,
                 Top<T> top) {
             this.lowerBounds = lowerBounds;
             this.upperBounds = upperBounds;
@@ -104,75 +125,121 @@ public class ConstraintStore<T> {
             this.top = top;
         }
 
-        public void add(T ty1, T ty2) throws ConstraintException {
-            boolean isVar1 = isVar.test(ty1);
-            boolean isVar2 = isVar.test(ty2);
-            if(isVar1 && isVar2) {
-                addClosure(ty1, ty2);
-            } else if(isVar1) {
-                addUpperBound(ty1, ty2);
-            } else if(isVar2) {
-                addLowerBound(ty2, ty1);
-            } else {
-                final List<Tuple2<T, T>> constraints = sub.apply(ty1, ty2).orElseThrow(() -> new ConstraintException());
-                addAll(constraints);
-            }
-        }
-
-        public void add(Map.Entry<T, T> constraint) throws ConstraintException {
-            add(constraint.getKey(), constraint.getValue());
-        }
-
-        public void addAll(Iterable<? extends Map.Entry<T, T>> constraints) throws ConstraintException {
-            for(Map.Entry<T, T> constraint : constraints) {
-                add(constraint);
-            }
-        }
-
-        public void addAll(ConstraintStore<T> store) throws ConstraintException {
-            for(Map.Entry<T, T> lb : store.lowerBounds.entrySet()) {
-                addLowerBound(lb.getKey(), lb.getValue());
-            }
-            for(Map.Entry<T, T> ub : store.upperBounds.entrySet()) {
-                addUpperBound(ub.getKey(), ub.getValue());
-            }
-            for(Map.Entry<T, T> e : store.closure.entrySet()) {
-                addClosure(e.getKey(), e.getValue());
-            }
-        }
-
-        private void addClosure(T v1, T v2) throws ConstraintException {
-            if(closure.__insert(v1, v2)) {
-                logger.info("close {} <: {}", v1, v2);
-            }
-        }
-
-        private void addLowerBound(T v, T lb) throws ConstraintException {
-            if(!lowerBounds.containsKey(v)) {
-                lowerBounds.__put(v, lb);
-                if(!upperBounds.containsKey(v)) {
-                    final T ub = top.apply(lb).orElseThrow(() -> new ConstraintException());
-                    addUpperBound(v, ub);
+        public void addAll(Collection<? extends Map.Entry<T, T>> constraints) throws ConstraintException {
+            final Deque<Map.Entry<T, T>> worklist = new LinkedList<>();
+            worklist.addAll(constraints);
+            while(!worklist.isEmpty()) {
+                final Map.Entry<T, T> constraint = worklist.removeFirst();
+                final T ty1 = constraint.getKey();
+                final T ty2 = constraint.getValue();
+                boolean isVar1 = isVar.test(ty1);
+                boolean isVar2 = isVar.test(ty2);
+                if(isVar1 && isVar2) {
+                    addVars(ty1, ty2, worklist::addLast);
+                } else if(isVar1) {
+                    addUpperBound(ty1, ty2, worklist::addLast);
+                } else if(isVar2) {
+                    addLowerBound(ty2, ty1, worklist::addLast);
+                } else {
+                    checkTypes(ty1, ty2, worklist::addLast);
                 }
-            } else {
-                final Tuple2<T, List<Tuple2<T, T>>> typeAndConstraints =
-                        glb.apply(lb, lowerBounds.get(v)).orElseThrow(() -> new ConstraintException());
-                addAll(typeAndConstraints._2());
             }
         }
 
-        private void addUpperBound(T v, T ub) throws ConstraintException {
-            if(!upperBounds.containsKey(v)) {
-                upperBounds.__put(v, ub);
-                if(!lowerBounds.containsKey(v)) {
-                    final T lb = bot.apply(ub).orElseThrow(() -> new ConstraintException());
-                    addLowerBound(v, lb);
-                }
-            } else {
-                final Tuple2<T, List<Tuple2<T, T>>> typeAndConstraints =
-                        lub.apply(ub, upperBounds.get(v)).orElseThrow(() -> new ConstraintException());
-                addAll(typeAndConstraints._2());
+        /*
+         * add V1 <: V2
+         *   - pre(V1) <: V2
+         *   - V1 <: post(V2)
+         *   - pre(V1) + V1 <: ub(V2)
+         *   - lb(V1) <: V2 + post(V2)
+         */
+        private void addVars(T v1, T v2, Add<T> add) throws ConstraintException {
+            if(v1.equals(v2)) {
+                return;
             }
+            if(closure.put(v1, v2)) {
+                final T lb = lowerBounds.get(v1);
+                if(lb != null) {
+                    add.apply(lb, v2);
+                }
+                final T ub = upperBounds.get(v2);
+                if(ub != null) {
+                    add.apply(v1, ub);
+                }
+                for(T pre1 : closure.inverse().get(v1)) {
+                    add.apply(pre1, v2);
+                    if(ub != null) {
+                        add.apply(pre1, ub);
+                    }
+                    for(T post2 : closure.get(v2)) {
+                        add.apply(v1, post2);
+                        if(lb != null) {
+                            add.apply(lb, post2);
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+         * add T1 <: V2
+         *   - lub
+         *   - invent ub
+         *   - lb(V2) <: ub(V2)
+         *   - T1 <: post(V2)
+         */
+        private void addLowerBound(T v, T lb, Add<T> add) throws ConstraintException {
+            if(lowerBounds.containsKey(v)) {
+                final Tuple2<T, List<Tuple2<T, T>>> typeAndConstraints =
+                        lub.apply(lb, lowerBounds.get(v)).orElseThrow(() -> new ConstraintException());
+                lb = typeAndConstraints._1();
+                add.applyAll(typeAndConstraints._2());
+            }
+            lowerBounds.__put(v, lb);
+            if(upperBounds.containsKey(v)) {
+                add.apply(lb, upperBounds.get(v));
+            } else {
+                final T ub = top.apply(lb).orElseThrow(() -> new ConstraintException());
+                add.apply(v, ub);
+            }
+            for(T post : closure.get(v)) {
+                add.apply(lb, post);
+            }
+        }
+
+        /*
+         * add V1 <: T2
+         *   - glb
+         *   - invent lb
+         *   - lb(V1) <: ub(V1)
+         *   - pre(V1) <: T2
+         */
+        private void addUpperBound(T v, T ub, Add<T> add) throws ConstraintException {
+            if(upperBounds.containsKey(v)) {
+                final Tuple2<T, List<Tuple2<T, T>>> typeAndConstraints =
+                        glb.apply(ub, upperBounds.get(v)).orElseThrow(() -> new ConstraintException());
+                ub = typeAndConstraints._1();
+                add.applyAll(typeAndConstraints._2());
+            }
+            upperBounds.__put(v, ub);
+            if(lowerBounds.containsKey(v)) {
+                add.apply(lowerBounds.get(v), ub);
+            } else {
+                final T lb = bot.apply(ub).orElseThrow(() -> new ConstraintException());
+                add.apply(lb, v);
+            }
+            for(T pre : closure.inverse().get(v)) {
+                add.apply(pre, ub);
+            }
+        }
+
+        /*
+         * add T1 <: T2
+         *   - sub
+         */
+        private void checkTypes(T ty1, T ty2, Add<T> add) throws ConstraintException {
+            final List<Tuple2<T, T>> constraints = sub.apply(ty1, ty2).orElseThrow(() -> new ConstraintException());
+            add.applyAll(constraints);
         }
 
         public ConstraintStore<T> freeze() {
@@ -203,6 +270,19 @@ public class ConstraintStore<T> {
 
     @FunctionalInterface
     interface Bot<T> extends PartialFunction1<T, T> {
+    }
+
+    @FunctionalInterface
+    interface Add<T> extends Action1<Map.Entry<T, T>> {
+
+        default void apply(T ty1, T ty2) {
+            apply(ImmutableTuple2.of(ty1, ty2));
+        }
+
+        default void applyAll(Iterable<? extends Map.Entry<T, T>> constraints) {
+            constraints.forEach(this::apply);
+        }
+
     }
 
     public static class ConstraintException extends Exception {

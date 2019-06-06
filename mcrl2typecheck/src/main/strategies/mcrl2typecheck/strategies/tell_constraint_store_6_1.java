@@ -4,7 +4,6 @@ import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.strategoxt.lang.Context;
 import org.strategoxt.lang.Strategy;
 
-import mb.nabl2.util.Tuple2;
 import mcrl2typecheck.strategies.ConstraintStore.Bot;
 import mcrl2typecheck.strategies.ConstraintStore.ConstraintException;
 import mcrl2typecheck.strategies.ConstraintStore.Glb;
@@ -31,10 +30,7 @@ public class tell_constraint_store_6_1 extends Strategy {
         final ConstraintStore.Transient<IStrategoTerm> constraintStore =
                 ConstraintStoreUtils.matchStore(tvars[0]).melt(isVar, sub, glb, lub, bot, top);
         try {
-            for(Tuple2<IStrategoTerm, IStrategoTerm> constraint : ConstraintStoreUtils
-                    .matchConstraints(constraintsTerm)) {
-                constraintStore.add(constraint._1(), constraint._2());
-            }
+            constraintStore.addAll(ConstraintStoreUtils.matchConstraints(constraintsTerm));
         } catch(ConstraintException ex) {
             return null;
         }

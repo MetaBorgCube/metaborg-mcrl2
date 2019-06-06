@@ -8,4 +8,6 @@ rules
 
   external tell-constraint-store(is-var,sub,glb,lub,bot,top|C)
 
+  external get-store-constraints(|)
+
   external constraint-store-to-string(pp|)

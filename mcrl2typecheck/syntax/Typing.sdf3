@@ -179,7 +179,9 @@ context-free syntax
     }
   >
 
-  ConstraintEdge = ["[Type]" -> "[Type]";]
+  ConstraintEdge.VV = ["[Type]" -> "[Type]";]
+  ConstraintEdge.LB = ["[Type]" -> "[Type]" \[ arrowhead=onormal, style=dashed \];]
+  ConstraintEdge.UB = ["[Type]" -> "[Type]" \[ arrowhead=onormal, style=dashed \];]
 
   Substitution       = <[<{Substitution-Entry ", "}*>]>
   Substitution-Entry =  <<TVar> := <Type>>

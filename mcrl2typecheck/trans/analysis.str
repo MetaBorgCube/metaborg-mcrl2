@@ -312,6 +312,7 @@ rules // Debugging
         result := "(no expression)"
       end end
 
+
   debug-show-constraintgraph:
       (_, _, spec, path, _) -> (filename, result)
     with
@@ -328,7 +329,11 @@ rules // Debugging
             result := "// expression has errors"
           case ?[DC]:
             DC-result := <pp-Typing-string;prefix-lines(|"// ")> DC
-          ; G-result := <get-typing-constraints;pp-ConstraintGraph-string> DC
+          ; G-result := < get-typing-constraints
+                        ; get-store-constraints
+                        ; map(constraint-to-edge)
+                        ; pp-ConstraintGraph-string
+                        > DC
           ; D := <toplevel-gc-typing;erase-typing-schemes> DC
           ; D-result := <pp-Typing-string;prefix-lines(|"// ")> D
           ; result := <separate-by(|"\n\n");concat-strings> [
@@ -343,3 +348,10 @@ rules // Debugging
       else
         result := "// cannot show constraints for multiple data expression"
       end end
+
+  constraint-to-edge =
+    switch id
+      case (is-var, is-var) : !VV(<Fst>, <Snd>)
+      case (is-var, id    ) : !UB(<Fst>, <Snd>)
+      case (id    , is-var) : !LB(<Fst>, <Snd>)
+    end
