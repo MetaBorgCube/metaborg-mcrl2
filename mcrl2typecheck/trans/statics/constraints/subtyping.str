@@ -12,6 +12,14 @@ imports
 
 rules
 
+  merge-constraint-stores =
+    merge-constraint-stores(is-var,subtype-decompose,glb-decompose,lub-decompose,bot-decompose,top-decompose)
+
+  tell-constraint-store(|C) =
+    tell-constraint-store(is-var,subtype-decompose,glb-decompose,lub-decompose,bot-decompose,top-decompose|C)
+
+rules
+
   pos-vars: FORALL(V*, T) -> <fatal-err(|"Cannot check polarity of type schemes")>
 
   pos-vars: FUNCTION(T1*, T2) -> <conc> (V1*, V2*)
@@ -72,6 +80,74 @@ rules
 
 rules
 
+  bot-decompose: BOOL() -> BOOL()
+
+  bot-decompose: T -> T'
+    with
+      N* := <number-types>
+    where
+      <get-index> (T, N*)
+    ; T' := <Hd> N*
+
+  bot-decompose: LIST(_) -> LIST(V)
+    with
+      V := NVAR(<newname> "U")
+
+  bot-decompose: SET(_) -> SET(V)
+    with
+      V := NVAR(<newname> "U")
+
+  bot-decompose: BAG(_) -> BAG(V)
+    with
+      V := NVAR(<newname> "U")
+
+  bot-decompose: NAMED(x) -> NAMED(x)
+
+  bot-decompose: FUNCTION(T1*, _) -> FUNCTION(V1*, V2)
+    with
+      V1* := <map(!PVAR(<newname> "U"))> T1*
+    ; V2  := NVAR(<newname> "U")
+
+  bot-decompose: PRODUCT(T*) -> PRODUCT(V*)
+    with
+      V* := <map(!NVAR(<newname> "U"))> T*
+
+rules
+
+  top-decompose: BOOL() -> BOOL()
+
+  top-decompose: T -> T'
+    with
+      N* := <number-types>
+    where
+      <get-index> (T, N*)
+    ; T' := <last> N*
+
+  top-decompose: LIST(_) -> LIST(V)
+    with
+      V := NVAR(<newname> "U")
+
+  top-decompose: SET(_) -> SET(V)
+    with
+      V := NVAR(<newname> "U")
+
+  top-decompose: BAG(_) -> BAG(V)
+    with
+      V := NVAR(<newname> "U")
+
+  top-decompose: NAMED(x) -> NAMED(x)
+
+  top-decompose: FUNCTION(T1*, _) -> FUNCTION(V1*, V2)
+    with
+      V1* := <map(!NVAR(<newname> "U"))> T1*
+    ; V2  := NVAR(<newname> "U")
+
+  top-decompose: PRODUCT(T*) -> PRODUCT(V*)
+    with
+      V* := <map(!NVAR(<newname> "U"))> T*
+
+rules
+
   subtype-decompose: (BOOL(), BOOL()) -> []
 
   subtype-decompose: (T, U) -> []
@@ -93,8 +169,6 @@ rules
   subtype-decompose: (FUNCTION(T1*, T2), FUNCTION(U1*, U2)) -> [(T2, U2)|<zip> (U1*, T1*)]
 
   subtype-decompose: (PRODUCT(T*), PRODUCT(U*)) -> <zip> (T*, U*)
-
-  subtype-decompose: (BOTTOM(), T) -> []
 
 rules
 
@@ -147,10 +221,6 @@ rules
     ; C2* := <zip> (T2*, V*)
     ; C* := [C1*, C2*]
 
-  lub-decompose: (BOTTOM(), T2) -> (T2, [])
-
-  lub-decompose: (T1, BOTTOM()) -> (T1, [])
-
 rules
 
   // upper bounds are combined using greatest lower bound, so results should be negative
@@ -201,40 +271,6 @@ rules
     ; C1* := <zip> (V*, T1*)
     ; C2* := <zip> (V*, T2*)
     ; C* := [C1*, C2*]
-
-  glb-decompose: (BOTTOM(), T2) -> (BOTTOM(), [])
-
-  glb-decompose: (T1, BOTTOM()) -> (BOTTOM(), [])
-
-rules
-
-/*
-  tell-subtypes(|C) = <tell-subtypes> (<id>, C)
-
-  tell-subtypes: ((Ts, Us), C) -> <zip;foldr(!C, tell-subtype)> (Ts, Us)
-    where <is-list> Ts; <is-list> Us
-  tell-subtypes: ((T, Us), C) -> <map(\ U -> (T, U) \);foldr(!C, tell-subtype)> Us
-    where <not(is-list)> T; <is-list> Us
-  tell-subtypes: ((Ts, U), C) -> <map(\ T -> (T, U) \);foldr(!C, tell-subtype)> Ts
-    where <is-list> Ts; <not(is-list)> U
-*/
-
-rules
-
-/*
-  type-polarities(|C): T -> (P*, N*)
-    with
-      P'* := <pos-vars> T
-    ; N'* := <neg-vars> T
-    ; (P*, N*) := <compute-polarities(pos-vars,neg-vars|P'*,N'*)> C
-
-  typing-polarities: DC(_, _, T, C, E) -> (P*, N*)
-    with
-      (P'*, N'*) := <type-polarities(|C)> T
-    ; (P''*, N''*) := <collect-om(typing-polarities);unzip;(concat;make-set,concat;make-set)> E
-    ; P* := <union> (P'*, P''*)
-    ; N* := <union> (N'*, N''*)
-*/
 
 rules
 

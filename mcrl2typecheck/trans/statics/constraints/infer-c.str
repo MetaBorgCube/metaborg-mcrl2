@@ -121,10 +121,13 @@ rules
   infer-listenum-c(|ctx): D* -> D
     with
       T* := <map(get-typing-type)> D*
-    ; C := <map(get-typing-constraints);merge-constraint-stores> D*
-    ; V := PVAR(<newname> "LE")
+    ; V  := PVAR(<newname> "LE")
+    ; C* := <map(get-typing-constraints)> D*
+    where
+      C  := <merge-constraint-stores> C*
     ; C' := <map(\ T -> (T, V) \);tell-constraint-store(|C)> T*
-    ; U := LIST(V)
+    with
+      U := LIST(V)
     ; D := DC(ctx, ListEnum(<map(get-typing-expr)> D*){Type(U)}, U, C', T-ListEnum(D*))
 
 
@@ -147,12 +150,15 @@ rules
       (D1*, D2*) := <unzip> Delt*
     ; T1* := <map(get-typing-type)> D1*
     ; T2* := <map(get-typing-type)> D2*
-    ; C12 := <map(get-typing-constraints);merge-constraint-stores> [D1*, D2*]
     ; V := PVAR(<newname> "BE")
     ; C1' := <map(\ T1 -> (T1, V) \)> T1*
     ; C2' := <map(\ T2 -> (T2, NAT()) \)> T2*
-    ; C := <conc;tell-constraint-store(|C12)> (C1', C2')
-    ; elt* := <map(\ (D1, D2) -> BagEnumElt(<get-typing-expr> D1, <get-typing-expr> D2) \)> Delt*
+    ; C* := <map(get-typing-constraints)> [D1*, D2*]
+    where
+      C12 := <merge-constraint-stores> C*
+    ; C   := <conc;tell-constraint-store(|C12)> (C1', C2')
+    with
+      elt* := <map(\ (D1, D2) -> BagEnumElt(<get-typing-expr> D1, <get-typing-expr> D2) \)> Delt*
     ; U := BAG(V)
     ; D := DC(ctx, BagEnum(elt*){Type(U)}, U, C, T-BagEnum(Delt*))
 
@@ -172,8 +178,10 @@ rules
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    ; C := <tell-constraint-store(|C')> [(T',BOOL())]
-    ; U := SET(T)
+    where
+      C := <tell-constraint-store(|C')> [(T',BOOL())]
+    with
+      U := SET(T)
     ; D := DC(ctx, SetBagComp(vdecl, <get-typing-expr> D'){Type(U)}, U, C, T-SetComp(D'))
 
   // @type D ~> D
@@ -181,8 +189,10 @@ rules
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    ; C  := <tell-constraint-store(|C')> [(T',NAT())]
-    ; U := BAG(T)
+    where
+      C  := <tell-constraint-store(|C')> [(T',NAT())]
+    with
+      U := BAG(T)
     ; D := DC(ctx, SetBagComp(vdecl, <get-typing-expr> D'){Type(U)}, U, C, T-BagComp(D'))
 
 
@@ -196,10 +206,13 @@ rules
   infer-setenum-c(|ctx): D* -> D
     with
       T* := <map(get-typing-type)> D*
-    ; C := <map(get-typing-constraints);merge-constraint-stores> D*
-    ; V := PVAR(<newname> "SE")
+    ; V  := PVAR(<newname> "SE")
+    ; C* := <map(get-typing-constraints)> D*
+    where
+      C  := <merge-constraint-stores> C*
     ; C' := <map(\ T -> (T, V) \);tell-constraint-store(|C)> T*
-    ; U := SET(V)
+    with
+      U := SET(V)
     ; D := DC(ctx, SetEnum(<map(get-typing-expr)> D*){Type(U)}, U, C', T-SetEnum(D*))
 
 
@@ -214,8 +227,10 @@ rules
   infer-app-c(|ctx): (D1, D2*) -> D
     with
       [T1|T2*] := <map(get-typing-type)> [D1|D2*]
-    ; C := <map(get-typing-constraints);merge-constraint-stores> [D1|D2*]
-    ; V := PVAR(<newname> "A")
+    ; C* := <map(get-typing-constraints)> [D1|D2*]
+    ; V  := PVAR(<newname> "A")
+    where
+      C  := <merge-constraint-stores> C*
     ; C' := <tell-constraint-store(|C)> [(T1, FUNCTION(T2*, V))]
     with
       D := DC(ctx, FunApp(<get-typing-expr> D1, <map(get-typing-expr)> D2*){Type(V)}, V, C', T-FunApp(D1, D2*))
@@ -234,8 +249,10 @@ rules
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    ; C := <tell-constraint-store(|C')> [(T', BOOL())]
-    ; T := BOOL()
+    where
+      C := <tell-constraint-store(|C')> [(T', BOOL())]
+    with
+      T := BOOL()
     ; D := DC(ctx, ForAll(vdecls, <get-typing-expr> D'){Type(T)}, T, C, T-ForAll(D'))
 
 
@@ -252,8 +269,10 @@ rules
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    ; C := <tell-constraint-store(|C')> [(T', BOOL())]
-    ; T := BOOL()
+    where
+      C := <tell-constraint-store(|C')> [(T', BOOL())]
+    with
+      T := BOOL()
     ; D := DC(ctx, Exists(vdecls, <get-typing-expr> D'){Type(T)}, T, C, T-Exists(D'))
 
 
@@ -303,7 +322,10 @@ rules
     with
       T1 := <get-typing-type> D1
     ; T2* := <map(get-typing-type)> D2*
-    ; C := <map(get-typing-constraints);merge-constraint-stores> [D1|D2*]
+    ; C* := <map(get-typing-constraints)> [D1|D2*]
+    where
+      C := <merge-constraint-stores> C*
+    
 
 
   // @type e -> M([D])
@@ -321,5 +343,7 @@ rules
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    ; C := <tell-constraint-store(|C')> [(T', T)]
-    ; D := DC(ctx, As(<get-typing-expr> D', srt){Type(T)}, T, C, T-As(D'))
+    where
+      C := <tell-constraint-store(|C')> [(T', T)]
+    with
+      D := DC(ctx, As(<get-typing-expr> D', srt){Type(T)}, T, C, T-As(D'))

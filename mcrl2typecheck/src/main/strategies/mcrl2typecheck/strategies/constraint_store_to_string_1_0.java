@@ -11,7 +11,7 @@ public class constraint_store_to_string_1_0 extends Strategy {
     static final Strategy instance = new constraint_store_to_string_1_0();
 
     @Override public IStrategoTerm invoke(Context context, IStrategoTerm storeTerm, Strategy pp) {
-        final ConstraintStore<IStrategoTerm> constraintStore = ConstraintStoreUtils.match(storeTerm);
+        final ConstraintStore<IStrategoTerm> constraintStore = ConstraintStoreUtils.matchStore(storeTerm);
         final Function1<IStrategoTerm, String> toString = t -> {
             IStrategoTerm resultTerm = pp.invoke(context, t);
             return resultTerm != null ? Tools.asJavaString(resultTerm) : t.toString();
