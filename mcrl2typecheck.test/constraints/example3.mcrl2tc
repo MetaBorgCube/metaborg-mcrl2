@@ -1,0 +1,7 @@
+data_specification
+  map f : Nat -> Nat;
+data_variables
+  p : Pos
+  n : Nat
+data_expressions
+  ps == ns whr ps = [p], ns = [n] end

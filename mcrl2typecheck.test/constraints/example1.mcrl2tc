@@ -1,0 +1,5 @@
+data_specification
+  map f : Nat -> Nat;
+data_variables
+data_expressions
+  f(1)

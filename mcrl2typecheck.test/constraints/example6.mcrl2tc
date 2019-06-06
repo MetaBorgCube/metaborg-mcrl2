@@ -1,0 +1,5 @@
+data_specification
+  map f : Nat -> Bool;
+data_variables
+data_expressions
+  f((fs.1)(1)) whr fs = [] end

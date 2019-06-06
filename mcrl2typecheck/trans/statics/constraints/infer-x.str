@@ -339,7 +339,5 @@ rules
   apply-scheme-x: (T1, T2*) -> T1''
     where
       T1'@FUNCTION(T11*, _) := <polarize-scheme> T1
-    ; C := <zip;init-subtypes> (T2*, T11*)
-    ; (C', sbs) := <gc-constraint-store(all-vars,polarity,gc-substitute,pp-partial-mcrl2typecheck-string|[])> C
-    ; sbs' := <unify(is-var)> sbs
-    ; T1'' := <substitute(|sbs')> T1'
+    // T2* with T11* and take lub of all matches vor all vars in T11*
+    ; T1'' := <fail> T1'

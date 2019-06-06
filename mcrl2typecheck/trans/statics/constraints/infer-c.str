@@ -6,42 +6,48 @@ imports
   signatures/mcrl2/-
 
   analysis
+  desugar
   statics/-
+  statics/declarative/-
   statics/constraints/-
   pp
-
-/*
 
 rules
 
   toplevel-infer-expr-c(prune|sort*, map*, var*): e -> D*
     with
-      D* := <infer-expr-c(prune|sort*, map*, var*, [], <init-constraint-store>)> e
+      D* := <infer-expr-c(prune|sort*, map*, var*, [])> e
 
-  infer-expr-c(prune|sort*, map*, var*, ctx, C): e -> D'*
+  // @type e -> M([D])
+  infer-expr-c(prune|sort*, map*, var*, ctx): e -> D'*
     with
-      <pp-DataExpr-string;log-info(|"checking ")> e
-    ; D* := <infer-expr-c'(prune|sort*, map*, var*, ctx, C)> e
-    ; D'* := <map(gc);prune> D*
-    ; <map(pp-Typing-string;log-info)> D'*
-    with <length;AddCount> D*
+      <log-info(pp-DataExpr-string|"checking ")> e
+    ; D* := <infer-expr-c'(prune|sort*, map*, var*, ctx);or-error(|e, "Type error")> e
+    ; D'* := <fmap(prune;or-error(|e, "Pruning error"))> D*
+    ; <fmap(log-info(pp-Typing-string|"found derivations"))> D'*
+    ; <log-info(pp-DataExpr-string|"checked ")> e
+    with <fmap(length;AddCount)> D*
 
 rules
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@DataRef(x) -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@DataRef(x) -> D*
     with
-    ( yTE* := <stdlib;getsome(where(?(x, _)));![]>
-    ; log-err-msg(|$[Naked reference to built-in [x]])
-   <+ yTE* := <getsome(where(?(x, _)));map(!(<id>, T-DataRef-GlobalMap()))> map*
-   <+ yTE* := <getfirst(where(?(x, _)));MkSingleton;map(!(<id>, T-DataRef-GlobalVar()))> var*
-   <+ yTE* := <getfirst(where(?(x, _)));MkSingleton;map(!(<id>, T-DataRef-Local()))> ctx
-   <+ yTE* := []
-    ; log-err-msg(|$[Unresolved reference [x]])
+    C := <init-constraint-store>
+  ; ( yT* := <stdlib;getsome(where(?(x, _)));map((id,polarize-scheme))>
+    ; D* :=  <map(\ (y, T) -> DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-GlobalMap()) \)> yT*
+   <+ yT* := <getsome(where(?(x, _)))> map*
+    ; D* := <map(\ (y, T) -> DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-GlobalMap()) \)> yT*
+   <+ (y, T) := <getfirst(where(?(x, _)))> var*
+    ; D* := [DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-GlobalVar())]
+   <+ (y, T) := <getfirst(where(?(x, _)))> ctx
+    ; D* := [DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-Local())]
+   <+ D* := Errors([(e, $[Unresolved reference [x]])])
     )
-    ; D* := <map(\ ((y, T), E) -> DC(ctx, e{Type(T), Ref(y)}, T, C, E) \)> yTE*
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@Number(n) -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@Number(n) -> D*
     with
       if <string-starts-with(|"-")> n then
         T := INT()
@@ -53,248 +59,214 @@ rules
         T := POS()
       ; E := T-Number-Pos()
       end end
+    ; C := <init-constraint-store>
     ; D* := [DC(ctx, e{Type(T)}, T, C, E)]
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@True() -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@True() -> D*
     with
       T := BOOL()
     ; E := T-True()
+    ; C := <init-constraint-store>
     ; D* := [DC(ctx, e{Type(T)}, T, C, E)]
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@False() -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@False() -> D*
     with
       T := BOOL()
     ; E := T-False()
+    ; C := <init-constraint-store>
     ; D* := [DC(ctx, e{Type(T)}, T, C, E)]
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@EmptyList() -> [DC(ctx, e{Type(T)}, T, C, E)]
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@EmptyList() -> D*
     with
-      V := BOTTOM()//NVAR(<newname> "L")
+      V := NVAR(<newname> "L")
     ; T := LIST(V)
     ; E := T-EmptyList()
+    ; C := <init-constraint-store>
+    ; D* := [DC(ctx, e{Type(T)}, T, C, E)]
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@EmptySet() -> [DC(ctx, e{Type(T)}, T, C, E)]
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@EmptySet() -> D*
     with
-      V := BOTTOM()//NVAR(<newname> "L")
+      V := NVAR(<newname> "S")
     ; T := SET(V)
     ; E := T-EmptySet()
+    ; C := <init-constraint-store>
+    ; D* := [DC(ctx, e{Type(T)}, T, C, E)]
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@EmptyBag() -> [DC(ctx, e{Type(T)}, T, C, E)]
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@EmptyBag() -> D*
     with
-      V := BOTTOM()//NVAR(<newname> "L")
+      V := NVAR(<newname> "B")
     ; T := BAG(V)
     ; E := T-EmptyBag()
+    ; C := <init-constraint-store>
+    ; D* := [DC(ctx, e{Type(T)}, T, C, E)]
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@ListEnum(e*) -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@ListEnum(e*) -> <or-error(|e, "Incompatible item types")> D*
     with
-      Ds* := <map(infer-expr-c(prune|sort*, map*, var*, ctx, C);prune);list-cart> e*
-    ; D* := <filter(infer-listenum-c(|ctx))> Ds*
-    ; if [_|_] := Ds*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Incompatible item types")> e
-      end
+      Ds* := <map(infer-expr-c(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e*
+    ; D* := <fmap(filter(infer-listenum-c(|ctx)))> Ds*
 
+  // @type [D] ~> D
   infer-listenum-c(|ctx): D* -> D
     with
       T* := <map(get-typing-type)> D*
-    ; C* := <map(get-typing-constraints)> D*
+    ; C := <map(get-typing-constraints);merge-constraint-stores> D*
     ; V := PVAR(<newname> "LE")
-    where
-      C' := <merge-subtypes> C*
-    ; C'' := <tell-subtypes(|C')> (T*, V)
+    ; C' := <map(\ T -> (T, V) \);tell-constraint-store(|C)> T*
+    ; U := LIST(V)
+    ; D := DC(ctx, ListEnum(<map(get-typing-expr)> D*){Type(U)}, U, C', T-ListEnum(D*))
+
+
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@BagEnum(elt*) -> <or-error(|e, "Incompatible item types")> D*
     with
-      U := LIST(V)
-    ; D := DC(ctx, ListEnum(<map(get-typing-expr)> D*){Type(U)}, U, C'', T-ListEnum(D*))
+      Delts* := <map(infer-bagenum-c-elt(prune|sort*, map*, var*, ctx));fjoin(list-cart)> elt*
+    ; D* := <fmap(filter(infer-bagenum-c(|ctx)))> Delts*
 
-
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@BagEnum(elt*) -> D*
+  // @type elt -> M([D])
+  infer-bagenum-c-elt(prune|sort*, map*, var*, ctx): BagEnumElt(e1, e2) -> Delt*
     with
-      Delts* := <map(infer-bagenum-c-elt(prune|sort*, map*, var*, ctx, C));list-cart> elt*
-    ; D* := <filter(infer-bagenum-c(|ctx))> Delts*
-    ; if [_|_] := Delts*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Incompatible item types")> e
-      end
+      D1* := <infer-expr-c(prune|sort*, map*, var*, ctx)> e1
+    ; D2* := <infer-expr-c(prune|sort*, map*, var*, ctx)> e2
+    ; Delt* := <fjoin(cart(id))> (D1*, D2*)
 
-  infer-bagenum-c-elt(prune|sort*, map*, var*, ctx, C): BagEnumElt(e1, e2) -> Delt*
-    with
-      D1* := <infer-expr-c(prune|sort*, map*, var*, ctx, C);prune> e1
-    ; D2* := <infer-expr-c(prune|sort*, map*, var*, ctx, C);prune> e2
-    ; Delt* := <cart(id)> (D1*, D2*)
-
+  // @type [D] ~> D
   infer-bagenum-c(|ctx): Delt* -> D
     with
       (D1*, D2*) := <unzip> Delt*
     ; T1* := <map(get-typing-type)> D1*
     ; T2* := <map(get-typing-type)> D2*
-    ; C* := <map(get-typing-constraints)> [D1*, D2*]
-    ; V1 := PVAR(<newname> "BE")
-    where
-      C' := <merge-subtypes> C*
-    ; C'' := <tell-subtypes(|C')> (T1*, V1)
-    ; C''' := <tell-subtypes(|C'')> (T2*, NAT())
-    with
-      elt* := <map(\ (D1, D2) -> BagEnumElt(<get-typing-expr> D1, <get-typing-expr> D2) \)> Delt*
-    ; U := BAG(V1)
-    ; D := DC(ctx, BagEnum(elt*){Type(U)}, U, C''', T-BagEnum(Delt*))
+    ; C12 := <map(get-typing-constraints);merge-constraint-stores> [D1*, D2*]
+    ; V := PVAR(<newname> "BE")
+    ; C1' := <map(\ T1 -> (T1, V) \)> T1*
+    ; C2' := <map(\ T2 -> (T2, NAT()) \)> T2*
+    ; C := <conc;tell-constraint-store(|C12)> (C1', C2')
+    ; elt* := <map(\ (D1, D2) -> BagEnumElt(<get-typing-expr> D1, <get-typing-expr> D2) \)> Delt*
+    ; U := BAG(V)
+    ; D := DC(ctx, BagEnum(elt*){Type(U)}, U, C, T-BagEnum(Delt*))
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@SetBagComp(vdecl, e') -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@SetBagComp(vdecl, e') -> <or-error(|e, "Wrong condition type")> D*
     with
       (x, T) := <vardecl-to-var(|sort*)> vdecl
     ; ctx' := [(x, T)|ctx]
-    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx', C)> e'
-    ; Dset* := <filter(infer-setcomp-c(|ctx, vdecl, T))> D'*
-    ; Dbag* := <filter(infer-bagcomp-c(|ctx, vdecl, T))> D'*
-    ; D* := <conc> (Dset*, Dbag*)
-    ; if [_|_] := D'*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Wrong condition type")> e
-      end
+    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx')> e'
+    ; Dset* := <fmap(filter(infer-setcomp-c(|ctx, vdecl, T)))> D'*
+    ; Dbag* := <fmap(filter(infer-bagcomp-c(|ctx, vdecl, T)))> D'*
+    ; D* := <fjoin(conc)> (Dset*, Dbag*)
 
+  // @type D ~> D
   infer-setcomp-c(|ctx, vdecl, T): D' -> D
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    where
-      C'' := <tell-subtype(|C')> (T', BOOL())
-    with
-      U := SET(T)
-    ; D := DC(ctx, SetBagComp(vdecl, <get-typing-expr> D'){Type(U)}, U, C', T-SetComp(D'))
+    ; C := <tell-constraint-store(|C')> [(T',BOOL())]
+    ; U := SET(T)
+    ; D := DC(ctx, SetBagComp(vdecl, <get-typing-expr> D'){Type(U)}, U, C, T-SetComp(D'))
 
+  // @type D ~> D
   infer-bagcomp-c(|ctx, vdecl, T): D' -> D
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    where
-      C'' := <tell-subtype(|C')> (T', NAT())
+    ; C  := <tell-constraint-store(|C')> [(T',NAT())]
+    ; U := BAG(T)
+    ; D := DC(ctx, SetBagComp(vdecl, <get-typing-expr> D'){Type(U)}, U, C, T-BagComp(D'))
+
+
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@SetEnum(e*) -> <or-error(|e, "Wrong item types")> D*
     with
-      U := BAG(T)
-    ; D := DC(ctx, SetBagComp(vdecl, <get-typing-expr> D'){Type(U)}, U, C'', T-BagComp(D'))
+      Ds* := <map(infer-expr-c(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e*
+    ; D* := <fmap(filter(infer-setenum-c(|ctx)))> Ds*
 
-
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@SetEnum(e*) -> D*
-    with
-      Ds* := <map(infer-expr-c(prune|sort*, map*, var*, ctx, C);prune);list-cart> e*
-    ; D* := <filter(infer-setenum-c(|ctx))> Ds*
-    ; if [_|_] := Ds*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Wrong item types")> e
-      end
-
+  // @type [D] ~> D
   infer-setenum-c(|ctx): D* -> D
     with
       T* := <map(get-typing-type)> D*
-    ; C* := <map(get-typing-constraints)> D*
+    ; C := <map(get-typing-constraints);merge-constraint-stores> D*
     ; V := PVAR(<newname> "SE")
-    where
-      C' := <merge-subtypes> C*
-    ; C'' := <tell-subtypes(|C')> (T*, V)
+    ; C' := <map(\ T -> (T, V) \);tell-constraint-store(|C)> T*
+    ; U := SET(V)
+    ; D := DC(ctx, SetEnum(<map(get-typing-expr)> D*){Type(U)}, U, C', T-SetEnum(D*))
+
+
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@FunApp(e1, e2*) -> <or-error(|e, "No matching functions/arguments")> D*
     with
-      U := SET(V)
-    ; D := DC(ctx, SetEnum(<map(get-typing-expr)> D*){Type(U)}, U, C'', T-SetEnum(D*))
+      D1* := <infer-expr-c(prune|sort*, map*, var*, ctx)> e1
+    ; D2s* := <map(infer-expr-c(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e2*
+    ; D* := <fjoin(join(infer-app-c(|ctx)))> (D1*, D2s*)
 
-
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@FunApp(e1@DataRef(x), e2*) -> D*
-    where
-      yT1* := <stdlib;getsome(where(?(x, _)))>
-    with
-      D2s* := <map(infer-expr-c(prune|sort*, map*, var*, ctx, C);prune);list-cart> e2*
-    ; D* := <join(infer-op-c(|ctx, C, e1))> (yT1*, D2s*)
-    ; if [_|_] := D2s*; [] := D* then
-        <pp-DataExpr-string;log-err(|"No matching functions/arguments")> e
-      end
-
-  infer-op-c(|ctx, C, e1): ((y, T1), D2*) -> D
-    with
-      T2* := <map(get-typing-type)> D2*
-    ; C* := <map(get-typing-constraints)> D2*
-    where
-      C' := <merge-subtypes> [C|C*]
-    ; T1' := <polarize-scheme> T1
-    ; T12 := PVAR(<newname> "A")
-    ; C'' := <tell-subtype(|C')> (T1', FUNCTION(T2*, T12))
-    with
-      D1 := DC(ctx, e1{Type(T1')}, T1', C, T-DataRef-Op())
-    ; D := DC(ctx, FunApp(<get-typing-expr> D1, <map(get-typing-expr)> D2*){Type(T12)}, T12, C'', T-FunApp(D1, D2*))
-
-
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@FunApp(e1, e2*) -> D*
-    with
-      D1* := <infer-expr-c(prune|sort*, map*, var*, ctx, C)> e1
-    ; D2s* := <map(infer-expr-c(prune|sort*, map*, var*, ctx, C);prune);list-cart> e2*
-    ; D* := <join(infer-app-c(|ctx))> (D1*, D2s*)
-    ; if [_|_] := D1*; [_|_] := D2s*; [] := D* then
-        <pp-DataExpr-string;log-err(|"No matching functions/arguments")> e
-      end
-
+  // @type (D, [D]) ~> D
   infer-app-c(|ctx): (D1, D2*) -> D
     with
       [T1|T2*] := <map(get-typing-type)> [D1|D2*]
-    ; C* := <map(get-typing-constraints)> [D1|D2*]
-    where
-      C := <merge-subtypes> C*
-    ; T12 := PVAR(<newname> "A")
-    ; C' := <tell-subtype(|C)> (T1, FUNCTION(T2*, T12))
+    ; C := <map(get-typing-constraints);merge-constraint-stores> [D1|D2*]
+    ; V := PVAR(<newname> "A")
+    ; C' := <tell-constraint-store(|C)> [(T1, FUNCTION(T2*, V))]
     with
-      D := DC(ctx, FunApp(<get-typing-expr> D1, <map(get-typing-expr)> D2*){Type(T12)}, T12, C', T-FunApp(D1, D2*))
+      D := DC(ctx, FunApp(<get-typing-expr> D1, <map(get-typing-expr)> D2*){Type(V)}, V, C', T-FunApp(D1, D2*))
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@ForAll(vdecls, e') -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@ForAll(vdecls, e') -> <or-error(|e, "Wrong type for body")> D*
     with
       xT* := <map(varsdecl-to-vars(|sort*));concat> vdecls
     ; ctx' := [xT*|ctx]
-    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx', C)> e'
-    ; D* := <filter(infer-forall-c(|ctx, vdecls))> D'*
-    ; if [_|_] := D'*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Wrong type for body")> e
-      end
+    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx')> e'
+    ; D* := <fmap(filter(infer-forall-c(|ctx, vdecls)))> D'*
 
+  // @type D ~> D
   infer-forall-c(|ctx, vdecls): D' -> D
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    where
-      C := <tell-subtype(|C')> (T', BOOL())
-    with
-      T := BOOL()
+    ; C := <tell-constraint-store(|C')> [(T', BOOL())]
+    ; T := BOOL()
     ; D := DC(ctx, ForAll(vdecls, <get-typing-expr> D'){Type(T)}, T, C, T-ForAll(D'))
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@Exists(vdecls, e') -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@Exists(vdecls, e') -> <or-error(|e, "Wrong type for body")> D*
     with
       xT* := <map(varsdecl-to-vars(|sort*));concat> vdecls
     ; ctx' := [xT*|ctx]
-    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx', C)> e'
-    ; D* := <filter(infer-exists-c(|ctx, vdecls))> D'*
-    ; if [_|_] := D'*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Wrong type for body")> e
-      end
+    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx')> e'
+    ; D* := <fmap(filter(infer-exists-c(|ctx, vdecls)))> D'*
 
+  // @type D ~> D
   infer-exists-c(|ctx, vdecls): D' -> D
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    where
-      C'' := <tell-subtype(|C')> (T', BOOL())
-    with
-      T := BOOL()
-    ; D := DC(ctx, Exists(vdecls, <get-typing-expr> D'){Type(T)}, T, C'', T-Exists(D'))
+    ; C := <tell-constraint-store(|C')> [(T', BOOL())]
+    ; T := BOOL()
+    ; D := DC(ctx, Exists(vdecls, <get-typing-expr> D'){Type(T)}, T, C, T-Exists(D'))
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@Lambda(vdecls, e') -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@Lambda(vdecls, e') -> <or-error(|e, "Wrong type for body")> D*
     with
       xT1* := <mapconcat(varsdecl-to-vars(|sort*))> vdecls
     ; T1* := <map(Snd)> xT1*
     ; ctx' := [xT1*|ctx]
-    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx', C)> e'
-    ; D* := <map(infer-lam-c(|ctx, vdecls, T1*))> D'*
-    ; if [_|_] := D'*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Wrong type for body")> e
-      end
+    ; D'* := <infer-expr-c(prune|sort*, map*, var*, ctx')> e'
+    ; D* := <fmap(filter(infer-lam-c(|ctx, vdecls, T1*)))> D'*
 
+  // @type D ~> D
   infer-lam-c(|ctx, vdecls, T1*): D' -> D
     with
       T' := <get-typing-type> D'
@@ -303,70 +275,51 @@ rules
     ; D := DC(ctx, Lambda(vdecls, <get-typing-expr> D'){Type(T)}, T, C', T-Lambda(D'))
 
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): e@Where(e1, a*) -> D*
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): e@Where(e1, a*) -> <or-error(|e, "Type error")> D*
     with
       (x*, e2*) := <map(\ Assign(x, e2) -> (x, e2) \);unzip> a*
-    ; D2s* := <map(infer-expr-c(prune|sort*, map*, var*, ctx, C));list-cart> e2*
-    ; D* := <map(infer-whr-c(prune|sort*, map*, var*, ctx, C, x*, e1));concat> D2s*
-    ; if [_|_] := D2s*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Error")> e
-      end
+    ; D2s* := <map(infer-expr-c(prune|sort*, map*, var*, ctx));fjoin(list-cart)> e2*
+    ; D* := <fmap(map(infer-whr-c(prune|sort*, map*, var*, ctx, x*, e1)));fmap(fjoin(concat))> D2s*
 
-  infer-whr-c(prune|sort*, map*, var*, ctx, C, x*, e1): D2* -> D*
+  // @type [D] -> M([D])
+  infer-whr-c(prune|sort*, map*, var*, ctx, x*, e1): D2* -> <or-error(|e1, "Type error")> D*
     with
       T2* := <map(get-typing-type)> D2*
     ; ctx' := <conc> (<zip> (x*, T2*), ctx)
-    ; D1* := <infer-expr-c(prune|sort*, map*, var*, ctx', C)> e1
-    ; D* := <filter(infer-whr-c-typing(|ctx, x*, D2*))> D1*
+    ; D1* := <infer-expr-c(prune|sort*, map*, var*, ctx')> e1
+    ; D* := <fmap(filter(infer-whr-c-typing(|ctx, x*, D2*)))> D1*
 
+  // @type D -> D
   infer-whr-c-typing(|ctx, x*, D2*):
       D1 -> DC( ctx
               , Where( <get-typing-expr> D1
                 , <zip(\ (x, D2) -> Assign(x, <get-typing-expr> D2) \)> (x*, D2*)
                 ){Type(T1)}
               , T1
-              , C'
+              , C
               , T-Where(D1, D2*)
               )
     with
       T1 := <get-typing-type> D1
-    ; C1 := <get-typing-constraints> D1
     ; T2* := <map(get-typing-type)> D2*
-    ; C2* := <map(get-typing-constraints)> D2*
-    where
-      C' := <merge-subtypes> [C1|C2*]
+    ; C := <map(get-typing-constraints);merge-constraint-stores> [D1|D2*]
 
-  infer-expr-c'(prune|sort*, map*, var*, ctx, C): As(e, S) -> D*
+
+  // @type e -> M([D])
+  infer-expr-c'(prune|sort*, map*, var*, ctx): As(e, S) -> <or-error(|e, "Cast error")> D*
     with
-      D'* := <infer-expr-c(prune|sort*, map*, var*, ctx, C)> e
+      D'* := <infer-expr-c(prune|sort*, map*, var*, ctx)> e
     ; if T := <sortref-to-type(|sort*)> S then
-        D* := <filter(infer-as-c(|S, ctx, T))> D'*
+        D* := <fmap(filter(infer-as-c(|S, ctx, T)))> D'*
       else
         D* := []
       end
-    ; if [_|_] := D'*; [] := D* then
-        <pp-DataExpr-string;log-err(|"Cast error")> e
-      end
 
+  // @type D ~> D
   infer-as-c(|srt, ctx, T): D' -> D
     with
       T' := <get-typing-type> D'
     ; C' := <get-typing-constraints> D'
-    where
-      C'' := <tell-subtype(|C')> (T', T)
-    with
-      D := DC(ctx, As(<get-typing-expr> D', srt){Type(T)}, T, C'', T-As(D'))
-
-rules
-
-  apply-scheme-c(|C): T -> (T', C')
-    where FORALL(_, _) := T
-    with
-      (T', C*) := <polarize-scheme> T
-    where
-      C' := <tell-subtypes(|C)> C*
-
-  apply-scheme-c(|C): T -> (T, C)
-    where not(FORALL(_, _) := T)
-
-*/
+    ; C := <tell-constraint-store(|C')> [(T', T)]
+    ; D := DC(ctx, As(<get-typing-expr> D', srt){Type(T)}, T, C, T-As(D'))

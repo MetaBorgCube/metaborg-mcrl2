@@ -1,11 +1,26 @@
 module statics/constraints/external
 
+signature
+  constructors
+    C : List(Term, Term) -> C
+
 rules
+
+  init-constraint-store: _ -> C([])
+
+  merge-constraint-stores: C* -> C(c*)
+    with c* := <mapconcat(?C(<id>))> C*
+
+  tell-constraint-store(|C): c* -> C(<conc> (c*, c'*))
+    with C(c'*) := C
+
+  prettyprint-mcrl2-ConstraintStore =
+    fail
 
   /**
    * @type _ -> Store
    */
-  external init-constraint-store(|)
+  //external init-constraint-store(|)
 
   /**
    * Add a subtype fact to the constraint store. Fails if the store becomes
@@ -19,7 +34,7 @@ rules
    * @param pp : Type -> String
    * @type (Type * Type) -> Store
    */
-  external tell-constraint-store(isVar,subtype,glb,lub,pp|store)
+  //external tell-constraint-store(isVar,subtype,glb,lub,pp|store)
 
   /**
    * @param isVar : Term -> Term
@@ -29,12 +44,12 @@ rules
    * @param pp : Type -> String
    * @type (Store * Store) -> Store
    */
-  external merge-constraint-stores(isVar,subtype,glb,lub,pp|)
+  //external merge-constraint-stores(isVar,subtype,glb,lub,pp|)
 
   /**
    * @type Store -> List((Type * Type))
    */
-  external get-constraints(|)
+  //external get-constraints(|)
 
   /**
    * @param all-vars : Type -> List(Var)
@@ -42,7 +57,7 @@ rules
    * @param pp : Type -> String
    * @type Store -> (Store, sbs:List(Var * Type))
    */
-  external gc-constraint-store(all-vars,polarity,substitute,pp|vars)
+  //external gc-constraint-store(all-vars,polarity,substitute,pp|vars)
 
   /**
    * @param pos-vars : List(Var)
@@ -50,4 +65,4 @@ rules
    * @param pp : Type -> String
    * @type Store -> (pos:List(Var) * neg:List(Var))
    */
-  external compute-polarities(pos-vars,neg-vars|pos-vars,neg-vars)
+  //external compute-polarities(pos-vars,neg-vars|pos-vars,neg-vars)

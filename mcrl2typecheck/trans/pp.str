@@ -84,15 +84,6 @@ rules
 
 rules
 
-  external constraint-store-to-string(pp|)
-
-  constraint-store-to-string =
-    constraint-store-to-string(pp-partial-mcrl2typecheck-string)
-
-  prettyprint-mcrl2-ConstraintStore =
-    not(is-list)
-  ; ![S(<constraint-store-to-string>)]
-
   prettyprint-mcrl2-Int =
     ![S(<int-to-string>)]
 

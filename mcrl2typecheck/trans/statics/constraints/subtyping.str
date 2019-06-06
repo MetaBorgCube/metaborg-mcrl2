@@ -12,23 +12,6 @@ imports
 
 rules
 
-  init-subtype = tell-subtype(|<init-constraint-store>)
-
-  init-subtypes = tell-subtypes(|<init-constraint-store>)
-
-  merge-subtype: (store, store') -> <merge-constraint-stores(is-var,subtype-decompose,glb-decompose,lub-decompose,pp-partial-mcrl2typecheck-string)>
-
-  merge-subtypes: [] -> <init-constraint-store>
-  merge-subtypes: [C|C*] -> <foldr(!C,merge-subtype)> C*
-
-  tell-subtype(|store) = <tell-subtype> (<id>, store)
-
-  tell-subtype: (TU, store) -> <tell-constraint-store(is-var,subtype-decompose,glb-decompose,lub-decompose,pp-partial-mcrl2typecheck-string|store)> TU
-
-  tell-subtypes(|C): TUs -> <foldr(!C,tell-subtype)> TUs
-
-rules
-
   pos-vars: FORALL(V*, T) -> <fatal-err(|"Cannot check polarity of type schemes")>
 
   pos-vars: FUNCTION(T1*, T2) -> <conc> (V1*, V2*)
@@ -225,6 +208,7 @@ rules
 
 rules
 
+/*
   tell-subtypes(|C) = <tell-subtypes> (<id>, C)
 
   tell-subtypes: ((Ts, Us), C) -> <zip;foldr(!C, tell-subtype)> (Ts, Us)
@@ -233,9 +217,11 @@ rules
     where <not(is-list)> T; <is-list> Us
   tell-subtypes: ((Ts, U), C) -> <map(\ T -> (T, U) \);foldr(!C, tell-subtype)> Ts
     where <is-list> Ts; <not(is-list)> U
+*/
 
 rules
 
+/*
   type-polarities(|C): T -> (P*, N*)
     with
       P'* := <pos-vars> T
@@ -248,26 +234,19 @@ rules
     ; (P''*, N''*) := <collect-om(typing-polarities);unzip;(concat;make-set,concat;make-set)> E
     ; P* := <union> (P'*, P''*)
     ; N* := <union> (N'*, N''*)
+*/
 
 rules
 
   toplevel-gc-typing: D@D(_, _, _, _) -> D
 
-  toplevel-gc-typing: D@DC(_, _, _, C, _) -> DC(ctx', e', T', C', E')
-    with
-      (C', sbs) := <gc-constraint-store(all-vars,polarity,gc-substitute,pp-partial-mcrl2typecheck-string|[])> C
-    ; sbs' := <unify(is-var)> sbs
-    ; DC(ctx', e', T', _, E') := <instantiate-typing(|sbs')> D
+  toplevel-gc-typing: D@DC(_, _, _, C, _) -> D
 
 
   gc-typing: D@D(_, _, _, _) -> D
 
-  gc-typing: D@DC(ctx, _, T, C, _) -> DC(ctx', e', T', C', E')
-    with
-      V* := <all-vars> (ctx, T)
-    ; (C', sbs) := <gc-constraint-store(all-vars,polarity,gc-substitute,pp-partial-mcrl2typecheck-string|V*)> C
-    ; sbs' := <unify(is-var);debug> sbs
-    ; DC(ctx', e', T', _, E') := <instantiate-typing(|sbs')> D
+  gc-typing: D@DC(ctx, _, T, C, _) -> D
+
 
 
   gc-substitute: (sbs, T) -> T'

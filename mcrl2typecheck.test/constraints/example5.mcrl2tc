@@ -1,0 +1,6 @@
+data_specification
+  map f : Nat -> Nat;
+data_variables
+  ps : List(Pos)
+data_expressions
+  ps == xs && xs == ys whr xs = [], ys = [] end

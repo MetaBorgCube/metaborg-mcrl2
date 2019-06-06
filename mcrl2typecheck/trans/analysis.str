@@ -21,11 +21,11 @@ rules // Analysis
   log-level = !Warning()
 
   toplevel-infer-expr(gc,prune|sort*, map*, var*) =
-    infer-expr(gc,prune|sort*, map*, var*, [], <init-constraint-store>)
+    infer-expr(gc,prune|sort*, map*, var*, [])
 
-  infer-expr(gc,prune|sort*, map*, var*, ctx, C) =
-    infer-expr-x(prune|sort*, map*, var*, ctx)
-//    infer-expr-c(map(gc);prune|sort*, map*, var*, ctx, C)
+  infer-expr(gc,prune|sort*, map*, var*, ctx) =
+//    infer-expr-x(prune|sort*, map*, var*, ctx)
+    infer-expr-c(prune|sort*, map*, var*, ctx)
 
   gc    = gc-typing
   prune = prune-typings
@@ -58,8 +58,8 @@ rules // Analysis
 
   editor-analyze-expr(|sort*, map*, var*): e -> (e', error*, warning*)
     where
-//      D* := <with-counter(analyze-expr(|sort*, map*, var*))> e
-      D* := <with-counter(analyze-and-verify-expr(|sort*, map*, var*))> e
+      D* := <with-counter(analyze-expr(|sort*, map*, var*))> e
+//      D* := <with-counter(analyze-and-verify-expr(|sort*, map*, var*))> e
     < V* := <collect-all(is-var)> D*
     ; Vstr := <map(pp-Type-string);separate-by(|", ");concat-strings> V*
     ; switch !D*
@@ -71,7 +71,7 @@ rules // Analysis
           e' := e
         ; error* := [(e, "Type error(s)")]
         ; warning* := []
-        case ?[D(_, e', _, _)]:
+        case ?[D(_, e', _, _)] + ?[DC(_, e', _, _, _)]:
           error* := []
         ; if [] := V* then
             warning* := []
@@ -105,8 +105,8 @@ rules // Analysis
     ; if <has-errors> DC* then
         Dmin* := DC*
       else
-        D*    := <map(toplevel-gc-typing;erase-typing-schemes)> DC*
-      ; Dmin* := <toplevel-minimal-typings> D*
+        D*    := <id <+ map(toplevel-gc-typing;erase-typing-schemes)> DC*
+      ; Dmin* := <id <+ toplevel-minimal-typings> D*
       end
 
   // @type Expr -> M([D])
@@ -233,7 +233,7 @@ rules // Debugging
       e -> result
     with
       D* := <with-counter(toplevel-infer-expr(gc,prune-typings|sort*, map*, var*))> e
-    ; D'* := <map(toplevel-gc-typing;erase-typing-schemes);prune-typings> D*
+    ; D'* := <id <+ map(toplevel-gc-typing;erase-typing-schemes);prune-typings> D*
     ; switch !D'*
         case ?[] + has-errors:
           result := Erroneous(e)
@@ -305,7 +305,7 @@ rules // Debugging
           case ?[] + has-errors:
             result := "(expression has errors)"
           otherwise:
-            Dmin*  := <map(toplevel-gc-typing;erase-typing-schemes);toplevel-minimal-typings> D*
+            Dmin*  := <id <+ map(toplevel-gc-typing;erase-typing-schemes);toplevel-minimal-typings> D*
           ; result := <pp-Derivations-string> (sort*, map*, var*, count, D*, Dmin*)
         end
       else
@@ -328,7 +328,7 @@ rules // Debugging
             result := "// expression has errors"
           case ?[DC]:
             DC-result := <pp-Typing-string;prefix-lines(|"// ")> DC
-          ; G-result := <get-typing-constraints;get-constraints;pp-ConstraintGraph-string> DC
+          ; G-result := <get-typing-constraints;pp-ConstraintGraph-string> DC
           ; D := <toplevel-gc-typing;erase-typing-schemes> DC
           ; D-result := <pp-Typing-string;prefix-lines(|"// ")> D
           ; result := <separate-by(|"\n\n");concat-strings> [

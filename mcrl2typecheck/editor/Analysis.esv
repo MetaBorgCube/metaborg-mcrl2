@@ -15,16 +15,16 @@ menus
   menu: "Analysis" (openeditor)
 
     action: "Show Analyzed AST"       = debug-show-analyzed
-    action: "Show Types"              = debug-show-typed
-    action: "Show Typings"            = debug-show-typing
-    action: "Show Minimal Typings"    = debug-show-minimal-typings
-    action: "Show All Typings"        = debug-show-all-typings
+    action: "Show Types"              = debug-show-typed (source)
+    action: "Show Typings"            = debug-show-typing (source)
+    action: "Show Minimal Typings"    = debug-show-minimal-typings (source)
+    action: "Show All Typings"        = debug-show-all-typings (source)
 
     separator
 
-    action: "Show Derivations"        = debug-show-derivations
-    action: "Show Pruned Derivations" = debug-show-pruned-derivations
+    action: "Show Derivations"        = debug-show-derivations (source)
+    action: "Show Pruned Derivations" = debug-show-pruned-derivations (source)
 
     separator
 
-    action: "Show Constraint Graph" = debug-show-constraintgraph
+    action: "Show Constraint Graph" = debug-show-constraintgraph (source)

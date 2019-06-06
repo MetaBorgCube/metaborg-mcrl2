@@ -171,7 +171,7 @@ context-free syntax
 
 context-free syntax
 
-  ConstraintStore = <{ <{Subtype "; "}*> }>
+  ConstraintStore.C = <{ <{Subtype "; "}*> }>
 
   ConstraintGraph = <
     digraph {
