@@ -4,10 +4,12 @@ rules
 
   external init-constraint-store(|)
 
-  external merge-constraint-stores(is-var,sub,glb,lub,bot,top|)
+  external merge-constraint-stores(ops|)
 
-  external tell-constraint-store(is-var,sub,glb,lub,bot,top|C)
+  external tell-constraint-store(ops|C)
+
+  external gc-constraint-store(ops|C)
 
   external get-store-constraints(|)
 
-  external constraint-store-to-string(pp|)
+  external constraint-store-to-string(ops|)

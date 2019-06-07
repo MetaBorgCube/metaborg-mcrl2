@@ -13,10 +13,25 @@ imports
 rules
 
   merge-constraint-stores =
-    merge-constraint-stores(is-var,subtype-decompose,glb-decompose,lub-decompose,bot-decompose,top-decompose)
+    merge-constraint-stores(constraint-store-ops)
 
   tell-constraint-store(|C) =
-    tell-constraint-store(is-var,subtype-decompose,glb-decompose,lub-decompose,bot-decompose,top-decompose|C)
+    tell-constraint-store(constraint-store-ops|C)
+
+  gc-constraint-store(|C) =
+    gc-constraint-store(constraint-store-ops|C)
+
+  constraint-store-to-string =
+    constraint-store-to-string(constraint-store-ops)
+
+  constraint-store-ops = ?("is-var", <is-var>)
+  constraint-store-ops = ?("all-vars", <all-vars>)
+  constraint-store-ops = ?("sub", <subtype-decompose>)
+  constraint-store-ops = ?("glb", <glb-decompose>)
+  constraint-store-ops = ?("lub", <lub-decompose>)
+  constraint-store-ops = ?("bot", <bot-decompose>)
+  constraint-store-ops = ?("top", <top-decompose>)
+  constraint-store-ops = ?("pp", <pp-Type-string>)
 
 rules
 

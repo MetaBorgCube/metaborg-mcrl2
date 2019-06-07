@@ -10,7 +10,7 @@ imports
   pp/-
   pp/mcrl2/-
   mcrl2/syntax/-
-  statics/constraints/constraint-store
+  statics/constraints/subtyping // for `constraint-store-to-string`
 
 rules
 
@@ -89,7 +89,7 @@ rules
     ![S(<int-to-string>)]
 
   prettyprint-mcrl2-ConstraintStore =
-    ![S(<constraint-store-to-string(pp-Type-string)>)]
+    ![S(<constraint-store-to-string>)]
 
 rules
 

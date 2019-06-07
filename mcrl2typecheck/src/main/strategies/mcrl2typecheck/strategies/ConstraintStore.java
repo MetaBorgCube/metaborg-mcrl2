@@ -4,13 +4,11 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.metaborg.util.functions.Action1;
 import org.metaborg.util.functions.Function1;
-import org.metaborg.util.functions.PartialFunction1;
-import org.metaborg.util.functions.PartialFunction2;
-import org.metaborg.util.functions.Predicate1;
 import org.metaborg.util.log.ILogger;
 import org.metaborg.util.log.LoggerUtils;
 
@@ -89,9 +87,8 @@ public class ConstraintStore<T> {
         return toString(Object::toString);
     }
 
-    public Transient<T> melt(IsVar<T> isVar, Sub<T> sub, Glb<T> glb, Lub<T> lub, Bot<T> bot, Top<T> top) {
-        return new Transient<>(lowerBounds.asTransient(), upperBounds.asTransient(), closure.melt(), isVar, sub, glb,
-                lub, bot, top);
+    public Transient<T> melt(Ops<T> ops) {
+        return new Transient<>(lowerBounds.asTransient(), upperBounds.asTransient(), closure.melt(), ops);
     }
 
     public static <T> ConstraintStore<T> of() {
@@ -104,25 +101,14 @@ public class ConstraintStore<T> {
         private final Map.Transient<T, T> upperBounds;
         private final IRelation2.Transient<T, T> closure;
 
-        private final IsVar<T> isVar;
-        private final Sub<T> sub;
-        private final Glb<T> glb;
-        private final Lub<T> lub;
-        private final Bot<T> bot;
-        private final Top<T> top;
+        private final Ops<T> ops;
 
-        public Transient(Map.Transient<T, T> lowerBounds, Map.Transient<T, T> upperBounds,
-                IRelation2.Transient<T, T> closure, IsVar<T> isVar, Sub<T> sub, Glb<T> glb, Lub<T> lub, Bot<T> bot,
-                Top<T> top) {
+        protected Transient(Map.Transient<T, T> lowerBounds, Map.Transient<T, T> upperBounds,
+                IRelation2.Transient<T, T> closure, Ops<T> ops) {
             this.lowerBounds = lowerBounds;
             this.upperBounds = upperBounds;
             this.closure = closure;
-            this.isVar = isVar;
-            this.sub = sub;
-            this.glb = glb;
-            this.lub = lub;
-            this.bot = bot;
-            this.top = top;
+            this.ops = ops;
         }
 
         public void addAll(Collection<? extends Map.Entry<T, T>> constraints) throws ConstraintException {
@@ -132,8 +118,8 @@ public class ConstraintStore<T> {
                 final Map.Entry<T, T> constraint = worklist.removeFirst();
                 final T ty1 = constraint.getKey();
                 final T ty2 = constraint.getValue();
-                boolean isVar1 = isVar.test(ty1);
-                boolean isVar2 = isVar.test(ty2);
+                boolean isVar1 = ops.isVar(ty1);
+                boolean isVar2 = ops.isVar(ty2);
                 if(isVar1 && isVar2) {
                     addVars(ty1, ty2, worklist::addLast);
                 } else if(isVar1) {
@@ -191,7 +177,7 @@ public class ConstraintStore<T> {
         private void addLowerBound(T v, T lb, Add<T> add) throws ConstraintException {
             if(lowerBounds.containsKey(v)) {
                 final Tuple2<T, List<Tuple2<T, T>>> typeAndConstraints =
-                        lub.apply(lb, lowerBounds.get(v)).orElseThrow(() -> new ConstraintException());
+                        ops.lub(lb, lowerBounds.get(v)).orElseThrow(() -> new ConstraintException());
                 lb = typeAndConstraints._1();
                 add.applyAll(typeAndConstraints._2());
             }
@@ -199,7 +185,7 @@ public class ConstraintStore<T> {
             if(upperBounds.containsKey(v)) {
                 add.apply(lb, upperBounds.get(v));
             } else {
-                final T ub = top.apply(lb).orElseThrow(() -> new ConstraintException());
+                final T ub = ops.top(lb).orElseThrow(() -> new ConstraintException());
                 add.apply(v, ub);
             }
             for(T post : closure.get(v)) {
@@ -217,7 +203,7 @@ public class ConstraintStore<T> {
         private void addUpperBound(T v, T ub, Add<T> add) throws ConstraintException {
             if(upperBounds.containsKey(v)) {
                 final Tuple2<T, List<Tuple2<T, T>>> typeAndConstraints =
-                        glb.apply(ub, upperBounds.get(v)).orElseThrow(() -> new ConstraintException());
+                        ops.glb(ub, upperBounds.get(v)).orElseThrow(() -> new ConstraintException());
                 ub = typeAndConstraints._1();
                 add.applyAll(typeAndConstraints._2());
             }
@@ -225,7 +211,7 @@ public class ConstraintStore<T> {
             if(lowerBounds.containsKey(v)) {
                 add.apply(lowerBounds.get(v), ub);
             } else {
-                final T lb = bot.apply(ub).orElseThrow(() -> new ConstraintException());
+                final T lb = ops.bot(ub).orElseThrow(() -> new ConstraintException());
                 add.apply(lb, v);
             }
             for(T pre : closure.inverse().get(v)) {
@@ -238,8 +224,12 @@ public class ConstraintStore<T> {
          *   - sub
          */
         private void checkTypes(T ty1, T ty2, Add<T> add) throws ConstraintException {
-            final List<Tuple2<T, T>> constraints = sub.apply(ty1, ty2).orElseThrow(() -> new ConstraintException());
+            final List<Tuple2<T, T>> constraints = ops.sub(ty1, ty2).orElseThrow(() -> new ConstraintException());
             add.applyAll(constraints);
+        }
+
+        public void gc(Iterable<T> live) {
+
         }
 
         public ConstraintStore<T> freeze() {
@@ -248,28 +238,24 @@ public class ConstraintStore<T> {
 
     }
 
-    @FunctionalInterface
-    interface IsVar<T> extends Predicate1<T> {
-    }
+    interface Ops<T> {
 
-    @FunctionalInterface
-    interface Sub<T> extends PartialFunction2<T, T, List<Tuple2<T, T>>> {
-    }
+        boolean isVar(T ty);
 
-    @FunctionalInterface
-    interface Glb<T> extends PartialFunction2<T, T, Tuple2<T, List<Tuple2<T, T>>>> {
-    }
+        Optional<List<T>> allVars(T ty);
 
-    @FunctionalInterface
-    interface Lub<T> extends PartialFunction2<T, T, Tuple2<T, List<Tuple2<T, T>>>> {
-    }
+        Optional<List<Tuple2<T, T>>> sub(T ty1, T ty2);
 
-    @FunctionalInterface
-    interface Top<T> extends PartialFunction1<T, T> {
-    }
+        Optional<Tuple2<T, List<Tuple2<T, T>>>> glb(T ty1, T ty2);
 
-    @FunctionalInterface
-    interface Bot<T> extends PartialFunction1<T, T> {
+        Optional<Tuple2<T, List<Tuple2<T, T>>>> lub(T ty1, T ty2);
+
+        Optional<T> bot(T ty);
+
+        Optional<T> top(T ty);
+
+        String toString(T ty);
+
     }
 
     @FunctionalInterface
