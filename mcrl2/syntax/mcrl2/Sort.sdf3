@@ -29,7 +29,8 @@ context-free syntax //--- Sort expressions and sort declarations
 
   MCRL2-SortProduct = MCRL2-SortExpr
 
-  MCRL2-SortSpec.SortSpec = <sort <{MCRL2-SortDecl " "}+>>
+  MCRL2-SortSpec.SortSpec = <sort 
+  <{MCRL2-SortDecl "\n  "}+>>
 
   MCRL2-SortDecl.SortDecl  = <<{MCRL2-ID ", "}+>;>
   MCRL2-SortDecl.SortAlias = <<MCRL2-ID> = <MCRL2-SortExpr>;>
@@ -45,10 +46,12 @@ context-free syntax //--- Constructors and mappings
 
   MCRL2-IdsDecl.IdsDecl = <<{MCRL2-ID ", "}+> : <MCRL2-SortExpr>>
   
-  MCRL2-ConsSpec.ConsSpec = <cons <MCRL2-ConsSpec-Decl+>>
+  MCRL2-ConsSpec.ConsSpec = <cons
+  <{MCRL2-ConsSpec-Decl "\n  "}+>>
   MCRL2-ConsSpec-Decl = <<MCRL2-IdsDecl>;>
 
-  MCRL2-MapSpec.MapSpec = <map <MCRL2-MapSpec-Decl+>>
+  MCRL2-MapSpec.MapSpec = <map 
+  <{MCRL2-MapSpec-Decl "\n  "}+>>
   MCRL2-MapSpec-Decl = <<MCRL2-IdsDecl>;>
 
 context-free priorities

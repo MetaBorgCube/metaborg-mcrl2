@@ -60,7 +60,8 @@ context-free syntax //--- Actions
   MCRL2-ActDecl.ActDecl = <<{MCRL2-ID ", "}+><MCRL2-ActDecl-Sort?>;>
   MCRL2-ActDecl-Sort = <: <MCRL2-SortProduct>>
 
-  MCRL2-ActSpec.ActSpec = <act <MCRL2-ActDecl+>>
+  MCRL2-ActSpec.ActSpec = <act 
+  <{MCRL2-ActDecl "\n  "}+>>
 
 //MultAct = ... omitted ...
 
@@ -70,7 +71,8 @@ context-free syntax //--- Process and initial state declaration
   MCRL2-ProcDecl-Args = {ast("[]")}
   MCRL2-ProcDecl-Args = <(<{MCRL2-VarsDecl ", "}+>)>
 
-  MCRL2-ProcSpec.ProcSpec = <proc <MCRL2-ProcDecl+>>
+  MCRL2-ProcSpec.ProcSpec = <proc 
+  <{MCRL2-ProcDecl "\n  "}+>>
 
   MCRL2-Init.Init = <init <MCRL2-ProcExpr>;>
 
