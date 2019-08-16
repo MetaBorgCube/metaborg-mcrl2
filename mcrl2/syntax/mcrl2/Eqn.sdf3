@@ -11,13 +11,17 @@ template options
 
 context-free syntax //--- Equations
 
-  MCRL2-GlobVarSpec.GlobVarSpec = <glob <{MCRL2-GlobVarSpec-Decls "\n"}+>>
+  MCRL2-GlobVarSpec.GlobVarSpec = <glob 
+  <{MCRL2-GlobVarSpec-Decls "\n  "}+>>
   MCRL2-GlobVarSpec-Decls.GlobVarsDecls = <<{MCRL2-VarsDecl ", "}+>;>
 
-  MCRL2-VarSpec.VarSpec = <var <{MCRL2-VarSpec-Decls "\n"}+>>
+  MCRL2-VarSpec.VarSpec = <var 
+  <{MCRL2-VarSpec-Decls "\n  "}+>>
   MCRL2-VarSpec-Decls.VarsDecls = <<{MCRL2-VarsDecl ", "}+>;>
 
-  MCRL2-EqnSpec.EqnSpec = <<MCRL2-VarSpec?> eqn <{MCRL2-EqnDecl "\n"}+>>
+  MCRL2-EqnSpec.EqnSpec = <<MCRL2-VarSpec?> 
+eqn 
+  <{MCRL2-EqnDecl "\n  "}+>>
 
   MCRL2-EqnDecl.EqnDecl = <<MCRL2-EqnDecl-Cond?><MCRL2-DataExpr> = <MCRL2-DataExpr>;>
   MCRL2-EqnDecl-Cond = [[MCRL2-DataExpr] -> ]

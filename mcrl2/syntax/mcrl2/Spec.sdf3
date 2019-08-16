@@ -22,9 +22,11 @@ context-free start-symbols
 context-free syntax //--- mCRL2 specification
 
   MCRL2-Spec.MCRL2Spec = <
-    <{MCRL2-SpecElt "\n"}*>
+    <{MCRL2-SpecElt "\n\n"}*>
+    
     <MCRL2-Init>
-    <{MCRL2-SpecElt "\n"}*>
+    
+    <{MCRL2-SpecElt "\n\n"}*>
   >
 
   MCRL2-SpecElt = MCRL2-SortSpec

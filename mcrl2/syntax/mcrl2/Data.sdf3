@@ -28,7 +28,7 @@ context-free syntax //--- Data expressions
   MCRL2-DataExpr.SetEnum         = <{<{MCRL2-DataExpr ", "}+>}>
   MCRL2-DataExpr                 = <(<MCRL2-DataExpr>)> {bracket}
   MCRL2-DataExpr.FunUpdate       = [[MCRL2-DataExpr]\[[MCRL2-DataExpr] -> [MCRL2-DataExpr]\]] {left}
-  MCRL2-DataExpr.FunApp          = <<MCRL2-DataExpr>(<{MCRL2-DataExpr ","}+>)> {left}
+  MCRL2-DataExpr.FunApp          = <<MCRL2-DataExpr>(<{MCRL2-DataExpr ", "}+>)> {left}
   MCRL2-DataExpr.Neg_SetCompl    = <!<MCRL2-DataExpr>>
   MCRL2-DataExpr.UnaryMinus      = <-<MCRL2-DataExpr>>
   MCRL2-DataExpr.ListSize        = <#<MCRL2-DataExpr>>
