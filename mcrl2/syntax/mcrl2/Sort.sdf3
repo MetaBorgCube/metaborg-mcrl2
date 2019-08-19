@@ -19,6 +19,8 @@ context-free syntax //--- Sort expressions and sort declarations
   MCRL2-SortExpr-CF.List  = "List" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
   MCRL2-SortExpr-CF.Set   = "Set" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
   MCRL2-SortExpr-CF.Bag   = "Bag" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
+  MCRL2-SortExpr-CF.FSet  = "FSet" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
+  MCRL2-SortExpr-CF.FBag  = "FBag" "(" LAYOUT?-CF MCRL2-SortExpr-CF LAYOUT?-CF ")"
   context-free syntax
   MCRL2-SortExpr.SortRef  = MCRL2-ID
   MCRL2-SortExpr          = <(<MCRL2-SortExpr>)> {bracket}
