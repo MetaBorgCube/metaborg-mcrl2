@@ -16,7 +16,7 @@ rules
     bottomup(try(Product(\ (hd, tl) -> [hd|tl] \)))
 
   mcrl2-desugar-function-sorts =
-    bottomup(try(Function(?Product(<id>) + MkSingleton, id)))
+    bottomup(try(Function(?Product(<id>) ; ![<id>], id)))
 
   mcrl2-desugar-commexprs =
     bottomup(try(CommExpr(\ (hd, tl) -> [hd|tl] \, id)))
@@ -34,7 +34,7 @@ rules
     bottomup(try(\ Product([hd]) -> hd \))
 
   mcrl2-resugar-function-sorts =
-    bottomup(try(Function(?[<id>] + !Product(<id>), id)))
+    bottomup(try(Function(?[<id>] ; !Product(<id>), id)))
 
   mcrl2-resugar-commexprs =
     bottomup(try(CommExpr(\ [hd|tl] -> (hd, tl) \, id)))
