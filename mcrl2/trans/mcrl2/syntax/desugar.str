@@ -30,8 +30,8 @@ rules
     mcrl2-resugar-commexprs
 
   mcrl2-resugar-product-sorts =
-    bottomup(try(Product(\ [hd|tl] -> (hd, tl) \)));
-    bottomup(try(\ Product([hd]) -> hd \))
+    bottomup(try(\ Product([hd]) -> hd \));
+    bottomup(try(Product(\ [hd|tl] -> (hd, tl) \)))
 
   mcrl2-resugar-function-sorts =
     bottomup(try(Function(?[<id>] ; !Product(<id>), id)))
