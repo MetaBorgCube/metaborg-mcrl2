@@ -121,11 +121,11 @@ context-free priorities
   }
   >
   /* 4 */ { right:
-    MCRL2-DataExpr.Disj
+    MCRL2-DataExpr.Conj
   }
   >
   /* 3 */ { right:
-    MCRL2-DataExpr.Conj
+    MCRL2-DataExpr.Disj
   }
   >
   /* 2 */ { right:
