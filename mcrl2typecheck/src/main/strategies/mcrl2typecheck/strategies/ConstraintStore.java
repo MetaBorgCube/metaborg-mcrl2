@@ -2,10 +2,12 @@ package mcrl2typecheck.strategies;
 
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.metaborg.util.functions.Action1;
 import org.metaborg.util.functions.Function1;
@@ -13,16 +15,24 @@ import org.metaborg.util.log.ILogger;
 import org.metaborg.util.log.LoggerUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
 import io.usethesource.capsule.Map;
+import io.usethesource.capsule.Set;
 import mb.nabl2.util.ImmutableTuple2;
+import mb.nabl2.util.TopoSorter;
+import mb.nabl2.util.TopoSorter.TopoSortedComponents;
 import mb.nabl2.util.Tuple2;
 import mb.nabl2.util.collections.HashTrieRelation2;
 import mb.nabl2.util.collections.IRelation2;
 
 public class ConstraintStore<T> {
+
     private static final ILogger logger = LoggerUtils.logger(ConstraintStore.class);
+
+    private static final boolean COMPUTE_CLOSURE = true;
+    private static final boolean ADD_MISSING_BOUNDS = true;
 
     private final Map.Immutable<T, T> lowerBounds;
     private final Map.Immutable<T, T> upperBounds;
@@ -114,6 +124,27 @@ public class ConstraintStore<T> {
         public void addAll(Collection<? extends Map.Entry<T, T>> constraints) throws ConstraintException {
             final Deque<Map.Entry<T, T>> worklist = new LinkedList<>();
             worklist.addAll(constraints);
+            doAdd(worklist);
+        }
+
+        // FIXME All the work is redone, but we know the other store is already
+        //       normalized. We only need to do something for the cases where
+        //       the two stores interact
+        public void addAll(ConstraintStore<T> other) throws ConstraintException {
+            final Deque<Map.Entry<T, T>> worklist = new LinkedList<>();
+            for(Map.Entry<T, T> e : other.lowerBounds.entrySet()) {
+                addLowerBound(e.getKey(), e.getValue(), worklist::addLast);
+            }
+            for(Map.Entry<T, T> e : other.upperBounds.entrySet()) {
+                addUpperBound(e.getKey(), e.getValue(), worklist::addLast);
+            }
+            for(Map.Entry<T, T> e : other.closure.entrySet()) {
+                addVars(e.getKey(), e.getValue(), worklist::addLast);
+            }
+            doAdd(worklist);
+        }
+
+        private void doAdd(Deque<Map.Entry<T, T>> worklist) throws ConstraintException {
             while(!worklist.isEmpty()) {
                 final Map.Entry<T, T> constraint = worklist.removeFirst();
                 final T ty1 = constraint.getKey();
@@ -143,7 +174,7 @@ public class ConstraintStore<T> {
             if(v1.equals(v2)) {
                 return;
             }
-            if(closure.put(v1, v2)) {
+            if(closure.put(v1, v2) && COMPUTE_CLOSURE) {
                 final T lb = lowerBounds.get(v1);
                 if(lb != null) {
                     add.apply(lb, v2);
@@ -154,14 +185,8 @@ public class ConstraintStore<T> {
                 }
                 for(T pre1 : closure.inverse().get(v1)) {
                     add.apply(pre1, v2);
-                    if(ub != null) {
-                        add.apply(pre1, ub);
-                    }
                     for(T post2 : closure.get(v2)) {
                         add.apply(v1, post2);
-                        if(lb != null) {
-                            add.apply(lb, post2);
-                        }
                     }
                 }
             }
@@ -182,14 +207,18 @@ public class ConstraintStore<T> {
                 add.applyAll(typeAndConstraints._2());
             }
             lowerBounds.__put(v, lb);
+
             if(upperBounds.containsKey(v)) {
                 add.apply(lb, upperBounds.get(v));
-            } else {
+            } else if(ADD_MISSING_BOUNDS) {
                 final T ub = ops.top(lb).orElseThrow(() -> new ConstraintException());
                 add.apply(v, ub);
             }
-            for(T post : closure.get(v)) {
-                add.apply(lb, post);
+
+            if(COMPUTE_CLOSURE) {
+                for(T post : closure.get(v)) {
+                    add.apply(lb, post);
+                }
             }
         }
 
@@ -208,14 +237,18 @@ public class ConstraintStore<T> {
                 add.applyAll(typeAndConstraints._2());
             }
             upperBounds.__put(v, ub);
+
             if(lowerBounds.containsKey(v)) {
                 add.apply(lowerBounds.get(v), ub);
-            } else {
+            } else if(ADD_MISSING_BOUNDS) {
                 final T lb = ops.bot(ub).orElseThrow(() -> new ConstraintException());
                 add.apply(lb, v);
             }
-            for(T pre : closure.inverse().get(v)) {
-                add.apply(pre, ub);
+
+            if(COMPUTE_CLOSURE) {
+                for(T pre : closure.inverse().get(v)) {
+                    add.apply(pre, ub);
+                }
             }
         }
 
@@ -228,8 +261,91 @@ public class ConstraintStore<T> {
             add.applyAll(constraints);
         }
 
-        public void gc(Iterable<T> live) {
+        public Iterable<T> allVars() {
+            return Iterables.concat(lowerBounds.keySet(), upperBounds.keySet(), closure.keySet(), closure.valueSet());
+        }
 
+        private Optional<T> getBound(T v) {
+            final Map.Transient<T, T> bounds;
+            if(ops.isPos(v)) {
+                bounds = lowerBounds;
+            } else if(ops.isNeg(v)) {
+                bounds = upperBounds;
+            } else {
+                throw new IllegalStateException("Expected var, got " + v);
+            }
+            return Optional.ofNullable(bounds.get(v));
+        }
+
+        public Map.Immutable<T, T> gc(Collection<T> live) {
+            final java.util.Set<T> inactiveVars = Sets.newHashSet(allVars());
+
+            //            logger.info("live = {}", live);
+
+            // discover reachable
+            final java.util.Set<T> visited = new HashSet<>();
+            final Deque<T> worklist = new LinkedList<>();
+            worklist.addAll(live);
+            while(!worklist.isEmpty()) {
+                final T ty = worklist.removeFirst();
+                if(!ops.isVar(ty)) {
+                    ops.allVars(ty).ifPresent(worklist::addAll);
+                    continue;
+                }
+                final T var = ty;
+                if(visited.contains(var)) {
+                    continue;
+                }
+                inactiveVars.remove(var);
+                visited.add(var);
+                worklist.addAll(closure.get(var));
+                worklist.addAll(closure.inverse().get(var));
+                if(lowerBounds.containsKey(var)) {
+                    worklist.add(lowerBounds.get(var));
+                }
+                if(upperBounds.containsKey(var)) {
+                    worklist.add(upperBounds.get(var));
+                }
+            }
+
+            //            logger.info("gc = {}", inactiveVars);
+
+            final TopoSortedComponents<T> components = TopoSorter.sort(inactiveVars, v -> {
+                return getBound(v)
+                        .map(ty -> ops.allVars(ty)
+                                .orElseThrow(() -> new IllegalStateException("Failed to get vars of " + ty)).stream()
+                                .filter(inactiveVars::contains).collect(Collectors.toList()))
+                        .orElse(ImmutableList.of());
+            });
+
+            final Map.Transient<T, T> subst = Map.Transient.of();
+            for(Set.Immutable<T> component : components) {
+                if(component.size() != 1) {
+                    throw new IllegalStateException("Expected singleton components, got " + component);
+                }
+                T v = Iterables.getOnlyElement(component);
+
+                if(ops.isPos(v)) {
+                    getBound(v).ifPresent(ty -> {
+                        subst.__put(v, ty);
+                    });
+                }
+
+                lowerBounds.__remove(v);
+                upperBounds.__remove(v);
+                closure.removeKey(v);
+                closure.removeValue(v);
+            }
+            final Map.Immutable<T, T> _subst = subst.freeze();
+            //            logger.info("subst = {}", _subst);
+            // Is it necessary to apply this substitution to the constraint
+            // store? It is if the variables in the substitution can still
+            // appear in one of the bounds (they are already removed from
+            // the domain of closure and bounds). All the remaining variables
+            // are still live, which means the variables in their bounds are
+            // also marked as live. Therefore, they cannot appear in this
+            // substitution.
+            return _subst;
         }
 
         public ConstraintStore<T> freeze() {
@@ -241,6 +357,10 @@ public class ConstraintStore<T> {
     interface Ops<T> {
 
         boolean isVar(T ty);
+
+        boolean isPos(T ty);
+
+        boolean isNeg(T ty);
 
         Optional<List<T>> allVars(T ty);
 

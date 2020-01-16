@@ -1,6 +1,8 @@
 package mcrl2typecheck.strategies;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.metaborg.util.functions.Function1;
@@ -8,6 +10,7 @@ import org.metaborg.util.functions.PartialFunction1;
 import org.metaborg.util.functions.PartialFunction2;
 import org.metaborg.util.functions.Predicate1;
 import org.spoofax.interpreter.core.Tools;
+import org.spoofax.interpreter.terms.IStrategoList;
 import org.spoofax.interpreter.terms.IStrategoString;
 import org.spoofax.interpreter.terms.IStrategoTerm;
 import org.spoofax.interpreter.terms.ITermFactory;
@@ -34,6 +37,8 @@ public class ConstraintStoreUtils {
 
     public static Ops<IStrategoTerm> ops(Context context, Strategy ops) {
         final Predicate1<IStrategoTerm> isVar = predicate1(context, ops, "is-var");
+        final Predicate1<IStrategoTerm> isPos = predicate1(context, ops, "is-pos");
+        final Predicate1<IStrategoTerm> isNeg = predicate1(context, ops, "is-neg");
         final PartialFunction1<IStrategoTerm, List<IStrategoTerm>> allVars =
                 function1(context, ops, "all-vars", ConstraintStoreUtils::matchTypes);
         final PartialFunction2<IStrategoTerm, IStrategoTerm, List<Tuple2<IStrategoTerm, IStrategoTerm>>> sub =
@@ -50,6 +55,14 @@ public class ConstraintStoreUtils {
             @Override public boolean isVar(IStrategoTerm ty) {
                 return isVar.test(ty);
             }
+
+            @Override public boolean isPos(IStrategoTerm ty) {
+                return isPos.test(ty);
+            };
+
+            @Override public boolean isNeg(IStrategoTerm ty) {
+                return isNeg.test(ty);
+            };
 
             @Override public Optional<List<IStrategoTerm>> allVars(IStrategoTerm ty) {
                 return allVars.apply(ty);
@@ -148,6 +161,15 @@ public class ConstraintStoreUtils {
             result.add(ImmutableTuple2.of(ty1, ty2));
         }
         return result.build();
+    }
+
+    public static IStrategoList buildConstraints(
+            Iterable<? extends Map.Entry<IStrategoTerm, IStrategoTerm>> constraints, ITermFactory factory) {
+        final List<IStrategoTerm> constraintTerms = new ArrayList<>();
+        for(Map.Entry<IStrategoTerm, IStrategoTerm> constraint : constraints) {
+            constraintTerms.add(factory.makeTuple(constraint.getKey(), constraint.getValue()));
+        }
+        return factory.makeList(constraintTerms);
     }
 
 }

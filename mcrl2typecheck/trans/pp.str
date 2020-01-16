@@ -10,7 +10,7 @@ imports
   pp/-
   pp/mcrl2/-
   mcrl2/syntax/-
-  statics/constraints/subtyping // for `constraint-store-to-string`
+  statics/constraints/constraint-store // for `constraint-store-to-string`
 
 rules
 
@@ -51,6 +51,9 @@ rules
     pp-mcrl2typecheck-string(prettyprint-mcrl2-Typing)
 
   pp-Subtype-string =
+    pp-mcrl2typecheck-string(prettyprint-mcrl2-Subtype)
+
+  pp-InstPair-string =
     pp-mcrl2typecheck-string(prettyprint-mcrl2-Subtype)
 
   pp-ConstraintStore-string =

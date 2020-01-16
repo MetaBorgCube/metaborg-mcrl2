@@ -1,0 +1,43 @@
+module statics/constraints/gc
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+  statics/declarative/-
+  statics/constraints/-
+  pp
+
+rules
+
+  toplevel-gc-typing: D@D(_, _, _, _) -> D
+
+  toplevel-gc-typing: DC(ctx, e, T, C, E) -> D'
+    with (C', subst) := <gc-constraint-store(|C)> []
+       ; D' := <instantiate-typing(seqsubst(is-var|subst))> DC(ctx, e, T, C', E)
+
+
+  gc-typing: D@D(_, _, _, _) -> D
+
+  gc-typing: DC(ctx, e, T, C, E) -> D'
+    with (C', subst) := <all-vars;gc-constraint-store(|C)> (ctx, T)
+       ; D' := <instantiate-typing(seqsubst(is-var|subst))> DC(ctx, e, T, C', E)
+
+
+  instantiate-typing(subst): D(ctx, e, T, E) -> D(ctx', e', T', E')
+    with
+      ctx' := <map((id, subst))> ctx
+    ; e' := <bottomup(id{map(try(Type(subst)))})> e
+    ; T' := <subst> T
+    ; E' := <try(sometd(instantiate-typing(subst)))> E
+
+  instantiate-typing(subst): DC(ctx, e, T, C, E) -> DC(ctx', e', T', C', E')
+    with
+      ctx' := <map((id, subst))> ctx
+    ; e' := <bottomup(id{map(try(Type(subst)))})> e
+    ; T' := <subst> T
+    ; C' := C
+    ; E' := <try(sometd(instantiate-typing(subst)))> E
+

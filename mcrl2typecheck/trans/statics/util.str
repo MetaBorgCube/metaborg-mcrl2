@@ -68,6 +68,12 @@ rules
   ; s
   |}
 
+rules
+
+  parsubst(is-var|sbs) = <substitute(is-var)> (sbs, <id>)
+
+  seqsubst(is-var|sbs) = <foldl(\ (sb, t) -> <parsubst(is-var|[sb])> t \)> (sbs, <id>)
+
 rules // Logging
 
   log-level = fail // !Error(), !Warning(), !Info()
@@ -78,7 +84,7 @@ rules // Logging
 
   log-debug(pp) =
     (is-list <+ MkSingleton)
-  ; map(debug;pp;indent-text(|3);debug)
+  ; map(/*debug;*/pp;indent-text(|3);debug)
 
   log-info(pp|msg)   = with(is-info-enabled<info-msg(|msg);log-debug(pp)+id)
   log-info-msg(|msg) = with(is-info-enabled<info-msg(|msg)+id)

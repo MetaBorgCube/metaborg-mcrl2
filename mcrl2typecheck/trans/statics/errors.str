@@ -1,4 +1,4 @@
-module statics/constraints/errors
+module statics/errors
 
 signature
   constructors

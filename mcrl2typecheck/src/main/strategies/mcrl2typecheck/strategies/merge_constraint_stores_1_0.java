@@ -16,7 +16,7 @@ public class merge_constraint_stores_1_0 extends Strategy {
         final ConstraintStore.Transient<IStrategoTerm> constraintStore = ConstraintStore.<IStrategoTerm>of().melt(ops);
         try {
             for(ConstraintStore<IStrategoTerm> store : ConstraintStoreUtils.matchStores(storesTerm)) {
-                constraintStore.addAll(store.getConstraints());
+                constraintStore.addAll(store);
             }
         } catch(ConstraintException ex) {
             return null;

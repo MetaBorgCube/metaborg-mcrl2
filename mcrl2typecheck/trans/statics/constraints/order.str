@@ -10,6 +10,10 @@ imports
 
 rules
 
+  is-prune-unsafe-type = is-var // FIXME Or has-vars?
+
+rules
+
   leq-typing: (D@DC(ctx, _, T, _, _), D'@DC(ctx', _, T', _, _)) -> <id>
     where
       <subctx> (ctx, ctx')

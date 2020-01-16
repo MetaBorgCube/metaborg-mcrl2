@@ -1,0 +1,35 @@
+module statics/constraints/polymorphism
+
+imports
+
+  signatures/-
+
+  analysis
+  statics/-
+  statics/declarative/-
+  statics/constraints/-
+  pp
+
+rules
+
+  polarize-scheme: T -> T
+    where not(FORALL(_, _) := T)
+
+  polarize-scheme: S@FORALL(V*, T) -> T'
+    with
+      FUNCTION(T1*, T2) := T
+    ; out-N* := <neg-vars;make-set> T2
+    ; out-P* := <pos-vars;make-set> T2
+    ; if not([] := <isect> (out-P*, out-N*)) then
+        <fatal-err(|"Variables are bipolar in codomain of type scheme")> S
+      end
+    ; out-V* := [out-N*, out-P*]
+    ; in-P* := <diff> (<mapconcat(pos-vars);make-set> T1*, out-V*)
+    ; in-N* := <diff> (<mapconcat(neg-vars);make-set> T1*, out-V*)
+    ; if not([] := <isect> (in-P*, in-N*)) then
+        <fatal-err(|"Variables are bipolar in domain of type scheme")> S
+      end
+    ; sbs-P := <map(\ V -> (V, PVAR(<var-name;newname> V)) \)> [out-P*, in-P*]
+    ; sbs-N := <map(\ V -> (V, NVAR(<var-name;newname> V)) \)> [out-N*, in-N*]
+    ; sbs := <conc> (sbs-P, sbs-N)
+    ; T' := <parsubst(is-var|sbs)> T

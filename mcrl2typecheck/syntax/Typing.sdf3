@@ -74,6 +74,8 @@ context-free syntax
 
   Subtype = [[Type] <: [Type]]
 
+  InstPair = [[Scheme] << [Scheme]]
+
 context-free syntax
 
   Context       = {Context-Entry ", "}*

@@ -12,29 +12,6 @@ imports
 
 rules
 
-  merge-constraint-stores =
-    merge-constraint-stores(constraint-store-ops)
-
-  tell-constraint-store(|C) =
-    tell-constraint-store(constraint-store-ops|C)
-
-  gc-constraint-store(|C) =
-    gc-constraint-store(constraint-store-ops|C)
-
-  constraint-store-to-string =
-    constraint-store-to-string(constraint-store-ops)
-
-  constraint-store-ops = ?("is-var", <is-var>)
-  constraint-store-ops = ?("all-vars", <all-vars>)
-  constraint-store-ops = ?("sub", <subtype-decompose>)
-  constraint-store-ops = ?("glb", <glb-decompose>)
-  constraint-store-ops = ?("lub", <lub-decompose>)
-  constraint-store-ops = ?("bot", <bot-decompose>)
-  constraint-store-ops = ?("top", <top-decompose>)
-  constraint-store-ops = ?("pp", <pp-Type-string>)
-
-rules
-
   pos-vars: FORALL(V*, T) -> <fatal-err(|"Cannot check polarity of type schemes")>
 
   pos-vars: FUNCTION(T1*, T2) -> <conc> (V1*, V2*)
@@ -106,26 +83,26 @@ rules
 
   bot-decompose: LIST(_) -> LIST(V)
     with
-      V := NVAR(<newname> "U")
+      V := NVAR(<newname> "bot")
 
   bot-decompose: SET(_) -> SET(V)
     with
-      V := NVAR(<newname> "U")
+      V := NVAR(<newname> "bot")
 
   bot-decompose: BAG(_) -> BAG(V)
     with
-      V := NVAR(<newname> "U")
+      V := NVAR(<newname> "bot")
 
   bot-decompose: NAMED(x) -> NAMED(x)
 
   bot-decompose: FUNCTION(T1*, _) -> FUNCTION(V1*, V2)
     with
-      V1* := <map(!PVAR(<newname> "U"))> T1*
-    ; V2  := NVAR(<newname> "U")
+      V1* := <map(!PVAR(<newname> "bot"))> T1*
+    ; V2  := NVAR(<newname> "bot")
 
   bot-decompose: PRODUCT(T*) -> PRODUCT(V*)
     with
-      V* := <map(!NVAR(<newname> "U"))> T*
+      V* := <map(!NVAR(<newname> "bot"))> T*
 
 rules
 
@@ -140,26 +117,26 @@ rules
 
   top-decompose: LIST(_) -> LIST(V)
     with
-      V := PVAR(<newname> "U")
+      V := PVAR(<newname> "top")
 
   top-decompose: SET(_) -> SET(V)
     with
-      V := PVAR(<newname> "U")
+      V := PVAR(<newname> "top")
 
   top-decompose: BAG(_) -> BAG(V)
     with
-      V := PVAR(<newname> "U")
+      V := PVAR(<newname> "top")
 
   top-decompose: NAMED(x) -> NAMED(x)
 
   top-decompose: FUNCTION(T1*, _) -> FUNCTION(V1*, V2)
     with
-      V1* := <map(!NVAR(<newname> "U"))> T1*
-    ; V2  := PVAR(<newname> "U")
+      V1* := <map(!NVAR(<newname> "top"))> T1*
+    ; V2  := PVAR(<newname> "top")
 
   top-decompose: PRODUCT(T*) -> PRODUCT(V*)
     with
-      V* := <map(!PVAR(<newname> "U"))> T*
+      V* := <map(!PVAR(<newname> "top"))> T*
 
 rules
 
@@ -202,17 +179,17 @@ rules
 
   lub-decompose: (LIST(T1), LIST(T2)) -> (LIST(V), C*)
     with
-      V := PVAR(<newname> "U")
+      V := PVAR(<newname> "lub")
     ; C* := [(T1, V), (T2, V)]
 
   lub-decompose: (SET(T1), SET(T2)) -> (SET(V), C*)
     with
-      V := PVAR(<newname> "U")
+      V := PVAR(<newname> "lub")
     ; C* := [(T1, V), (T2, V)]
 
   lub-decompose: (BAG(T1), BAG(T2)) -> (BAG(V), C*)
     with
-      V := PVAR(<newname> "U")
+      V := PVAR(<newname> "lub")
     ; C* := [(T1, V), (T2, V)]
 
   lub-decompose: (NAMED(x), NAMED(x)) -> (NAMED(x), [])
@@ -221,8 +198,8 @@ rules
     where
       <eq> (<length> T11*, <length> T21*)
     with
-      V1* := <map(!NVAR(<newname> "V"))> T11*
-    ; V2 := PVAR(<newname> "W")
+      V1* := <map(!NVAR(<newname> "lub"))> T11*
+    ; V2 := PVAR(<newname> "lub")
     ; C1* := <zip> (V1*, T11*)
     ; C2* := <zip> (V1*, T21*)
     ; C* := [(T12, V2), (T22, V2), C1*, C2*]
@@ -231,7 +208,7 @@ rules
     where
       <eq> (<length> T1*, <length> T2*)
     with
-      V* := <map(!PVAR(<newname> "V"))> T1*
+      V* := <map(!PVAR(<newname> "lub"))> T1*
     ; C1* := <zip> (T1*, V*)
     ; C2* := <zip> (T2*, V*)
     ; C* := [C1*, C2*]
@@ -253,17 +230,17 @@ rules
 
   glb-decompose: (LIST(T1), LIST(T2)) -> (LIST(V), C*)
     with
-      V := NVAR(<newname> "X")
+      V := NVAR(<newname> "glb")
     ; C* := [(V, T1), (V, T2)]
 
   glb-decompose: (SET(T1), SET(T2)) -> (SET(V), C*)
     with
-      V := NVAR(<newname> "X")
+      V := NVAR(<newname> "glb")
     ; C* := [(V, T1), (V, T2)]
 
   glb-decompose: (BAG(T1), BAG(T2)) -> (BAG(V), C*)
     with
-      V := NVAR(<newname> "X")
+      V := NVAR(<newname> "glb")
     ; C* := [(V, T1), (V, T2)]
 
   glb-decompose: (NAMED(x), NAMED(x)) -> (NAMED(x), [])
@@ -272,8 +249,8 @@ rules
     where
       <eq> (<length> T11*, <length> T21*)
     with
-      V1* := <map(!PVAR(<newname> "Y"))> T11*
-    ; V2 := NVAR(<newname> "Z")
+      V1* := <map(!PVAR(<newname> "glb"))> T11*
+    ; V2 := NVAR(<newname> "glb")
     ; C1* := <zip> (T11*, V1*)
     ; C2* := <zip> (T21*, V1*)
     ; C* := [(V2, T12), (V2, T22), C1*, C2*]
@@ -282,90 +259,7 @@ rules
     where
       <eq> (<length> T1*, <length> T2*)
     with
-      V* := <map(!NVAR(<newname> "V"))> T1*
+      V* := <map(!NVAR(<newname> "glb"))> T1*
     ; C1* := <zip> (V*, T1*)
     ; C2* := <zip> (V*, T2*)
     ; C* := [C1*, C2*]
-
-rules
-
-  toplevel-gc-typing: D@D(_, _, _, _) -> D
-
-  toplevel-gc-typing: D@DC(_, _, _, C, _) -> D
-
-
-  gc-typing: D@D(_, _, _, _) -> D
-
-  gc-typing: D@DC(ctx, _, T, C, _) -> D
-
-
-
-  gc-substitute: (sbs, T) -> T'
-    with
-      sbs' := <unify(is-var)> sbs
-    ; T' := <substitute(|sbs')> T
-
-
-  instantiate-typing(|sbs): D(ctx, e, T, E) -> D(ctx', e', T', E')
-    with
-      ctx' := <map((id, substitute(|sbs)))> ctx
-    ; e' := <bottomup(id{map(try(Type(substitute(|sbs))))})> e
-    ; T' := <substitute(|sbs)> T
-    ; E' := <try(sometd(instantiate-typing(|sbs)))> E
-
-  instantiate-typing(|sbs): DC(ctx, e, T, C, E) -> DC(ctx', e', T', C', E')
-    with
-      ctx' := <map((id, substitute(|sbs)))> ctx
-    ; e' := <bottomup(id{map(try(Type(substitute(|sbs))))})> e
-    ; T' := <substitute(|sbs)> T
-    ; C' := C
-    ; E' := <try(sometd(instantiate-typing(|sbs)))> E
-
-rules
-
-  substitute(|sbs) = <substitute(is-var)> (sbs, <id>)
-
-rules
-
-  /**
-   * sbs : List(Var * (n:Var, p:Var))
-   */
-  bisubstitute(|sbs) = bisubstitute(id|sbs)
-
-  bisubstitute(p|sbs) = FUNCTION(map(bisubstitute(p;Swap|sbs)), bisubstitute(p|sbs))
-
-  bisubstitute(p|sbs) = PRODUCT(bisubstitute(p|sbs))
-
-  bisubstitute(p|sbs) = LIST(bisubstitute(p|sbs))
-
-  bisubstitute(p|sbs) = SET(bisubstitute(p|sbs))
-
-  bisubstitute(p|sbs) = BAG(bisubstitute(p|sbs))
-
-  bisubstitute(p|sbs) = is-var; (lookup(|sbs) < p; Snd + id)
-
-  bisubstitute(p|sbs) = id
-  
-rules
-
-  polarize-scheme: T -> T
-    where not(FORALL(_, _) := T)
-
-  polarize-scheme: S@FORALL(V*, T) -> T'
-    with
-      FUNCTION(T1*, T2) := T
-    ; out-N* := <neg-vars;make-set> T2
-    ; out-P* := <pos-vars;make-set> T2
-    ; if not([] := <isect> (out-P*, out-N*)) then
-        <fatal-err(|"Variables are bipolar in codomain of type scheme")> S
-      end
-    ; out-V* := [out-N*, out-P*]
-    ; in-P* := <diff> (<mapconcat(pos-vars);make-set> T1*, out-V*)
-    ; in-N* := <diff> (<mapconcat(neg-vars);make-set> T1*, out-V*)
-    ; if not([] := <isect> (in-P*, in-N*)) then
-        <fatal-err(|"Variables are bipolar in domain of type scheme")> S
-      end
-    ; sbs-P := <map(\ V -> (V, PVAR(<var-name;newname> V)) \)> [out-P*, in-P*]
-    ; sbs-N := <map(\ V -> (V, NVAR(<var-name;newname> V)) \)> [out-N*, in-N*]
-    ; sbs := <conc> (sbs-P, sbs-N)
-    ; T' := <substitute(|sbs)> T

@@ -1,0 +1,105 @@
+data_specification
+  map ps2b : List(Pos) -> Bool;
+  map ns2b : List(Nat) -> Bool;
+  map is2b : List(Int) -> Bool;
+  map nss2b : List(List(Nat)) -> Bool;
+  map nsns2b : List(Nat) # List(Nat) -> Bool;
+  map psns2b : List(Pos) # List(Nat) -> Bool;
+  map psis2b : List(Pos) # List(Int) -> Bool;
+  map nsis2b : List(Nat) # List(Nat) -> Bool;
+  map n2n : Nat -> Nat;
+data_variables
+  p : Pos
+  n : Nat
+  i : Int
+  ps : List(Pos)
+  ns : List(Nat)
+  is : List(Int)
+data_expressions
+
+%  n == n
+  % _==_ : Nat # Nat -> Bool !
+  % _==_ : Int # Int -> Bool
+
+%  p == n
+  % _==_ : Nat # Nat -> Bool !
+  % _==_ : Int # Int -> Bool
+
+%  ns == ns
+  % _==_ : List(Nat) # List(Nat) -> Bool !
+  % _==_ : List(Int) # List(Int) -> Bool
+
+%  ns == ps
+  % _==_ : List(Nat) # List(Nat) -> Bool !
+  % _==_ : List(Int) # List(Int) -> Bool
+
+%  ns ++ ps
+  % _++_ : List(Nat) # List(Nat) -> List(Nat) !
+  % _++_ : List(Int) # List(Int) -> List(Int)
+
+%  ns ++ []
+  % L- <: Real, Nat <: S+, L- <: S+
+  % [] : List(Pos), _++_ : List(Nat) # List(Nat) -> List(Nat) !JFG
+  % [] : List(Nat), _++_ : List(Nat) # List(Nat) -> List(Nat) !
+  % [] : List(Pos), _++_ : List(Int) # List(Int) -> List(Int)
+  % [] : List(Nat), _++_ : List(Int) # List(Int) -> List(Int)
+  % [] : List(Int), _++_ : List(Int) # List(Int) -> List(Int)
+
+%  (ns ++ []):List(Int)
+  % L- <: Int, Nat <: S+, L- <: S+
+  % [] : List(Pos), _++_ : List(Nat) # List(Nat) -> List(Nat) !JFG
+  % [] : List(Nat), _++_ : List(Nat) # List(Nat) -> List(Nat) !
+  % [] : List(Pos), _++_ : List(Int) # List(Int) -> List(Int)
+  % [] : List(Nat), _++_ : List(Int) # List(Int) -> List(Int)
+  % [] : List(Int), _++_ : List(Int) # List(Int) -> List(Int)
+
+%  tail([]):List(Nat)
+  % L- <: Nat, Pos <: S+, L- <: S+
+  % [] : List(Pos), tail : List(Pos) -> List(Pos) !JFG
+  % [] : List(Pos), tail : List(Nat) -> List(Nat)
+  % [] : List(Nat), tail : List(Nat) -> List(Nat) !
+  % [] : List(Nat), tail : List(Int) -> List(Int)
+  % [] : List(Int), tail : List(Int) -> List(Int)
+
+%  tail(ns):List(Int)
+  % Nat <: S+
+  % tail : List(Nat) -> List(Nat) !
+  % tail : List(Int) -> List(Int)
+
+%  p |> ps
+  % _|>_ : Pos # List(Pos) -> List(Pos) !
+  % _|>_ : Nat # List(Nat) -> List(Nat)
+  % _|>_ : Int # List(Int) -> List(Int)
+
+%  p |> is
+  % _|>_ : Int # List(Int) -> List(Int)
+
+%  i |> ps
+  % _|>_ : Int # List(Int) -> List(Int)
+
+%  ns2b(xs) whr xs = [] end
+  % xs : List(Pos) !JFG
+  % xs : List(Nat) ?
+
+%  nsis2b(xs, xs) whr xs = [] end
+  % xs : List(Pos) !JFG
+  % xs : List(Nat) !
+
+%  (ns ++ ns):List(Int)
+  % _++_ : List(Nat) # List(Nat) -> List(Nat) !
+  % _++_ : List(Pos) # List(Pos) -> List(Pos)
+
+%  nss2b(xs) whr xs = [] end
+  % xs : List(List(Pos))
+  % xs : List(List(Nat))
+
+%  ns2b(xs) && is2b(xs) whr xs = [] end
+  % xs : List(Nat) !
+  % xs : List(Pos)
+
+  % _[_->_] : forall S I. (S -> I) # S # I -> (S -> I)
+%  n2n[p->n]
+%  n2n[n->p]
+%  n2n[n->n]
+%  n2n[n->i]
+%  n2n[i->n]

@@ -1,4 +1,4 @@
-module statics/constraints/infer-c
+module statics/constraints/infer
 
 imports
 
@@ -14,6 +14,8 @@ imports
 
 rules
 
+  // @param prune : [D] -> [D]
+  // @type e -> M([D])
   toplevel-infer-expr-c(prune|sort*, map*, var*): e -> D*
     with
       D* := <infer-expr-c(prune|sort*, map*, var*, [])> e
@@ -23,6 +25,7 @@ rules
     with
       <log-info(pp-DataExpr-string|"checking ")> e
     ; D* := <infer-expr-c'(prune|sort*, map*, var*, ctx);or-error(|e, "Type error")> e
+    ; log-info-msg(|"pruning ")
     ; D'* := <fmap(prune;or-error(|e, "Pruning error"))> D*
     ; <fmap(log-info(pp-Typing-string|"found derivations"))> D'*
     ; <log-info(pp-DataExpr-string|"checked ")> e
@@ -35,7 +38,7 @@ rules
     with
     C := <init-constraint-store>
   ; ( yT* := <stdlib;getsome(where(?(x, _)));map((id,polarize-scheme))>
-    ; D* :=  <map(\ (y, T) -> DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-GlobalMap()) \)> yT*
+    ; D* :=  <map(\ (y, T) -> DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-Op()) \)> yT*
    <+ yT* := <getsome(where(?(x, _)))> map*
     ; D* := <map(\ (y, T) -> DC(ctx, e{Type(T), Ref(y)}, T, C, T-DataRef-GlobalMap()) \)> yT*
    <+ (y, T) := <getfirst(where(?(x, _)))> var*

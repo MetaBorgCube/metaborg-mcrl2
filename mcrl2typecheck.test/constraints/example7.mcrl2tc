@@ -1,0 +1,6 @@
+data_specification
+  map f : List(Nat) -> Bool;
+data_variables
+data_expressions
+%  f(x |> xs) whr x = 4, xs = [5,6] end
+  x |> xs whr x = 4, xs = [0,6] end

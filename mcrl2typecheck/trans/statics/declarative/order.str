@@ -9,22 +9,36 @@ imports
 
 rules
 
-  prune-unsafe: (D1, D2) -> <id>
+  // Determine if two derivations cannot be compared for pruning
+  is-prune-unsafe: (D1, D2) -> <id>
     with
       T1 := <get-typing-type> D1
     ; T2 := <get-typing-type> D2
     where
-      <is-var + ?FUNCTION(_, _)> T1
-    + <is-var + ?FUNCTION(_, _)> T2
+      <is-prune-unsafe-type> T1
+    + <is-prune-unsafe-type> T2
 
+  is-prune-unsafe-type = ?FUNCTION(_, _)
+
+  // Prune the list of derivations. This function is a conservative version of
+  // computing the minimal typings, which accounts for the fact that the context
+  // may influence which derivation is picked
+  //
+  // @type [D] -> [D]
   prune-typings: D* -> D'*
     with
-      D'* := <list-mins(prune-unsafe < fail + leq-typing)> D*
+      D'* := <list-mins(is-prune-unsafe < fail + leq-typing)> D*
 
+  // Return the minimal derivations in the list
+  //
+  // @type [D] -> [D]
   toplevel-minimal-typings: D* -> D'*
     with
       D'* := <list-mins(leq-typing)> D*
 
+  // Partition derivations in a list of minimal derivations, and a list of non-minimal derivatiions
+  //
+  // @type [D] -> ([D], [D])
   toplevel-partition-typings: D* -> (D1*, D2*)
     with
       (D1*, D2*) := <list-partition(leq-typing)> D*

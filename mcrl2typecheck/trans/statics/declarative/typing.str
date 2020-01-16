@@ -180,14 +180,16 @@ rules
 
 rules
 
-  match-scheme(|T): FORALL(_, T') -> <id>
+  match-scheme(|T): U@FORALL(_, T') -> <id>
     where
       <pattern-match(is-var)> [(T', T)]
+   <+ <log-err(pp-InstPair-string|"Type mismatch");fail> (U, T)
 
   match-scheme(|T): T' -> <id>
     where
       not(FORALL(_, _) := T')
     ; <eq> (T', T)
+   <+ <log-err(pp-InstPair-string|"Type mismatch");fail> (T', T)
 
 rules
 

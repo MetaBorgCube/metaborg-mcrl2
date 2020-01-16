@@ -1,15 +1,63 @@
 module statics/constraints/constraint-store
 
+imports
+
+  statics/constraints/subtyping
+  statics/-
+
 rules
 
+  merge-constraint-stores =
+    log-info-msg(|"merging constraints")
+  ; merge-constraint-stores(constraint-store-ops)
+  ; log-info-msg(|"merged constraints")
+
+  tell-constraint-store(|C) =
+    log-info-msg(|"adding constraints")
+  ; tell-constraint-store(constraint-store-ops|C)
+  ; log-info-msg(|"added constraints")
+
+  gc-constraint-store(|C) =
+    log-info-msg(|"gc-ing constraints")
+  ; gc-constraint-store(constraint-store-ops|C)
+  ; log-info-msg(|"gc-ed constraints")
+
+  constraint-store-to-string =
+    constraint-store-to-string(constraint-store-ops)
+
+  constraint-store-ops = ?("is-var", <is-var>)
+  constraint-store-ops = ?("is-pos", <is-pos>)
+  constraint-store-ops = ?("is-neg", <is-neg>)
+  constraint-store-ops = ?("all-vars", <all-vars>)
+  constraint-store-ops = ?("sub", <subtype-decompose>)
+  constraint-store-ops = ?("glb", <glb-decompose>)
+  constraint-store-ops = ?("lub", <lub-decompose>)
+  constraint-store-ops = ?("bot", <bot-decompose>)
+  constraint-store-ops = ?("top", <top-decompose>)
+  constraint-store-ops = ?("pp", <pp-Type-string>)
+
+
+rules // external interface
+
+  // @type _ -> CStore
   external init-constraint-store(|)
 
+  // @param ops : COps
+  // @type [CStore] ~> CStore
   external merge-constraint-stores(ops|)
 
+  // @param ops : COps
+  // @param C : CStore
+  // @type [Type * Type] ~> CStore
   external tell-constraint-store(ops|C)
 
+  // @param ops : COps
+  // @param C : CStore
+  // @type [Var] -> (subst:[Var * Type] * CStore)
   external gc-constraint-store(ops|C)
 
+  // @type CStore -> [Type * Type]
   external get-store-constraints(|)
 
+  // @type CStore -> String
   external constraint-store-to-string(ops|)
