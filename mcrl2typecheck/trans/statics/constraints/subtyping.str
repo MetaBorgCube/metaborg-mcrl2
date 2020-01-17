@@ -162,6 +162,7 @@ rules
 
   subtype-decompose: (PRODUCT(T*), PRODUCT(U*)) -> <zip> (T*, U*)
 
+
 rules
 
   // lower bounds are combined with least upper bounds, so results should be positive
@@ -177,41 +178,49 @@ rules
     ; k := <max> (i, j)
     ; T := <index(|k)> N*
 
-  lub-decompose: (LIST(T1), LIST(T2)) -> (LIST(V), C*)
-    with
-      V := PVAR(<newname> "lub")
-    ; C* := [(T1, V), (T2, V)]
+  lub-decompose: (LIST(T1), LIST(T2)) -> (LIST(T), C*)
+    where
+      (T, C*) := <lub-decompose'> (T1, T2)
 
-  lub-decompose: (SET(T1), SET(T2)) -> (SET(V), C*)
-    with
-      V := PVAR(<newname> "lub")
-    ; C* := [(T1, V), (T2, V)]
+  lub-decompose: (SET(T1), SET(T2)) -> (SET(T), C*)
+    where
+      (T, C*) := <lub-decompose'> (T1, T2)
 
-  lub-decompose: (BAG(T1), BAG(T2)) -> (BAG(V), C*)
-    with
-      V := PVAR(<newname> "lub")
-    ; C* := [(T1, V), (T2, V)]
+  lub-decompose: (BAG(T1), BAG(T2)) -> (BAG(T), C*)
+    where
+      (T, C*) := <lub-decompose'> (T1, T2)
 
   lub-decompose: (NAMED(x), NAMED(x)) -> (NAMED(x), [])
 
-  lub-decompose: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> (FUNCTION(V1*, V2), C*)
+  lub-decompose: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> (FUNCTION(T1*, T2), C*)
     where
       <eq> (<length> T11*, <length> T21*)
-    with
-      V1* := <map(!NVAR(<newname> "lub"))> T11*
-    ; V2 := PVAR(<newname> "lub")
-    ; C1* := <zip> (V1*, T11*)
-    ; C2* := <zip> (V1*, T21*)
-    ; C* := [(T12, V2), (T22, V2), C1*, C2*]
+    where
+      (T1*, C1*) := <glbs-decompose'> (T11*, T21*)
+    ; (T2, C2*) := <lub-decompose'> (T12, T22)
+    ; C* := [C1*, C2*]
 
-  lub-decompose: (PRODUCT(T1*), PRODUCT(T2*)) -> (PRODUCT(V*), C*)
+  lub-decompose: (PRODUCT(T1*), PRODUCT(T2*)) -> (PRODUCT(T*), C*)
     where
       <eq> (<length> T1*, <length> T2*)
-    with
-      V* := <map(!PVAR(<newname> "lub"))> T1*
-    ; C1* := <zip> (T1*, V*)
-    ; C2* := <zip> (T2*, V*)
-    ; C* := [C1*, C2*]
+    where
+      (T*, C*) := <lubs-decompose'> (T1*, T2*)
+
+
+  lubs-decompose' =
+    zip(lub-decompose')
+  ; unzip
+  ; (id, concat)
+
+
+  lub-decompose': (T1, T2) -> (T, C*)
+    where
+      if <is-var> T1 + <is-var> T2 then
+        T := PVAR(<newname> "lub")
+      ; C* := [(T1, T), (T2, T)]
+      else
+        (T, C*) := <lub-decompose> (T1, T2)
+      end
 
 rules
 
@@ -225,41 +234,49 @@ rules
     where
       i := <get-index> (T1, N*)
     ; j := <get-index> (T2, N*)
-    ; k := <min> (i, j)
+    ; k := <max> (i, j)
     ; T := <index(|k)> N*
 
-  glb-decompose: (LIST(T1), LIST(T2)) -> (LIST(V), C*)
-    with
-      V := NVAR(<newname> "glb")
-    ; C* := [(V, T1), (V, T2)]
+  glb-decompose: (LIST(T1), LIST(T2)) -> (LIST(T), C*)
+    where
+      (T, C*) := <glb-decompose'> (T1, T2)
 
-  glb-decompose: (SET(T1), SET(T2)) -> (SET(V), C*)
-    with
-      V := NVAR(<newname> "glb")
-    ; C* := [(V, T1), (V, T2)]
+  glb-decompose: (SET(T1), SET(T2)) -> (SET(T), C*)
+    where
+      (T, C*) := <glb-decompose'> (T1, T2)
 
-  glb-decompose: (BAG(T1), BAG(T2)) -> (BAG(V), C*)
-    with
-      V := NVAR(<newname> "glb")
-    ; C* := [(V, T1), (V, T2)]
+  glb-decompose: (BAG(T1), BAG(T2)) -> (BAG(T), C*)
+    where
+      (T, C*) := <glb-decompose'> (T1, T2)
 
   glb-decompose: (NAMED(x), NAMED(x)) -> (NAMED(x), [])
 
-  glb-decompose: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> (FUNCTION(V1*, V2), C*)
+  glb-decompose: (FUNCTION(T11*, T12), FUNCTION(T21*, T22)) -> (FUNCTION(T1*, T2), C*)
     where
       <eq> (<length> T11*, <length> T21*)
-    with
-      V1* := <map(!PVAR(<newname> "glb"))> T11*
-    ; V2 := NVAR(<newname> "glb")
-    ; C1* := <zip> (T11*, V1*)
-    ; C2* := <zip> (T21*, V1*)
-    ; C* := [(V2, T12), (V2, T22), C1*, C2*]
+    where
+      (T1*, C1*) := <lubs-decompose'> (T11*, T21*)
+    ; (T2, C2*) := <glb-decompose'> (T12, T22)
+    ; C* := [C1*, C2*]
 
-  glb-decompose: (PRODUCT(T1*), PRODUCT(T2*)) -> (PRODUCT(V*), C*)
+  glb-decompose: (PRODUCT(T1*), PRODUCT(T2*)) -> (PRODUCT(T*), C*)
     where
       <eq> (<length> T1*, <length> T2*)
-    with
-      V* := <map(!NVAR(<newname> "glb"))> T1*
-    ; C1* := <zip> (V*, T1*)
-    ; C2* := <zip> (V*, T2*)
-    ; C* := [C1*, C2*]
+    where
+      (T*, C*) := <glbs-decompose'> (T1*, T2*)
+
+
+  glbs-decompose' =
+    zip(glb-decompose')
+  ; unzip
+  ; (id, concat)
+
+
+  glb-decompose': (T1, T2) -> (T, C*)
+    where
+      if <is-var> T1 + <is-var> T2 then
+        T := NVAR(<newname> "glb")
+      ; C* := [(T, T1), (T, T2)]
+      else
+        (T, C*) := <glb-decompose> (T1, T2)
+      end

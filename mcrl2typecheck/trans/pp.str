@@ -53,6 +53,13 @@ rules
   pp-Subtype-string =
     pp-mcrl2typecheck-string(prettyprint-mcrl2-Subtype)
 
+  pp-LUB-string =
+    pp-mcrl2typecheck-string(prettyprint-mcrl2-LUB)
+
+  pp-GLB-string =
+    pp-mcrl2typecheck-string(prettyprint-mcrl2-GLB)
+
+
   pp-InstPair-string =
     pp-mcrl2typecheck-string(prettyprint-mcrl2-Subtype)
 

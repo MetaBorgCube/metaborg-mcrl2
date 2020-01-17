@@ -4,6 +4,7 @@ imports
 
   statics/constraints/subtyping
   statics/-
+  pp
 
 rules
 
@@ -20,6 +21,7 @@ rules
   gc-constraint-store(|C) =
     log-info-msg(|"gc-ing constraints")
   ; gc-constraint-store(constraint-store-ops|C)
+  ; log-info(Snd;pp-Substitution-string|"subst = ")
   ; log-info-msg(|"gc-ed constraints")
 
   constraint-store-to-string =

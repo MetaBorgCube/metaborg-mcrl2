@@ -73,6 +73,8 @@ context-free syntax
   TVar.VAR      = <<MCRL2-ID>>
 
   Subtype = [[Type] <: [Type]]
+  LUB = [lub([Type], [Type])]
+  GLB = [glb([Type], [Type])]
 
   InstPair = [[Scheme] << [Scheme]]
 

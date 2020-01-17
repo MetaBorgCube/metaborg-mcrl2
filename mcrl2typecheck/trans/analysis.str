@@ -28,8 +28,8 @@ rules // Analysis
 //    infer-expr-bd(prune|sort*, map*, var*, ctx)
     infer-expr-c(map(gc);prune|sort*, map*, var*, ctx)
 
-  gc    = pass <+ gc-typing
-  prune = pass <+ prune-typings
+  gc    = skip <+ gc-typing
+  prune = skip <+ prune-typings
 
 rules // Analysis
 

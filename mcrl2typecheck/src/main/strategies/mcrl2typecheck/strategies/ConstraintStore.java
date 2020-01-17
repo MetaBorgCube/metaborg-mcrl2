@@ -1,10 +1,12 @@
 package mcrl2typecheck.strategies;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -47,6 +49,15 @@ public class ConstraintStore<T> {
 
     public int size() {
         return lowerBounds.size() + upperBounds.size() + closure.size();
+    }
+
+    public boolean containsVar(T var) {
+        return lowerBounds.containsKey(var) || upperBounds.containsKey(var) || closure.containsKey(var)
+                || closure.containsValue(var);
+    }
+
+    public Iterable<T> allVars() {
+        return Iterables.concat(lowerBounds.keySet(), upperBounds.keySet(), closure.keySet(), closure.valueSet());
     }
 
     public List<Tuple2<T, T>> getConstraints() {
@@ -121,6 +132,15 @@ public class ConstraintStore<T> {
             this.ops = ops;
         }
 
+        public boolean containsVar(T var) {
+            return lowerBounds.containsKey(var) || upperBounds.containsKey(var) || closure.containsKey(var)
+                    || closure.containsValue(var);
+        }
+
+        public Iterable<T> allVars() {
+            return Iterables.concat(lowerBounds.keySet(), upperBounds.keySet(), closure.keySet(), closure.valueSet());
+        }
+
         public void addAll(Collection<? extends Map.Entry<T, T>> constraints) throws ConstraintException {
             final Deque<Map.Entry<T, T>> worklist = new LinkedList<>();
             worklist.addAll(constraints);
@@ -132,15 +152,29 @@ public class ConstraintStore<T> {
         //       the two stores interact
         public void addAll(ConstraintStore<T> other) throws ConstraintException {
             final Deque<Map.Entry<T, T>> worklist = new LinkedList<>();
-            for(Map.Entry<T, T> e : other.lowerBounds.entrySet()) {
+
+            java.util.Map<Boolean, List<Entry<T, T>>> lbs = other.lowerBounds.entrySet().stream()
+                    .collect(Collectors.partitioningBy(e -> containsVar(e.getKey())));
+            java.util.Map<Boolean, List<Entry<T, T>>> ubs = other.upperBounds.entrySet().stream()
+                    .collect(Collectors.partitioningBy(e -> containsVar(e.getKey())));
+            java.util.Map<Boolean, List<Entry<T, T>>> cls = other.closure.entrySet().stream()
+                    .collect(Collectors.partitioningBy(e -> containsVar(e.getKey()) || containsVar(e.getValue())));
+
+            for(Map.Entry<T, T> e : lbs.get(true)) {
                 addLowerBound(e.getKey(), e.getValue(), worklist::addLast);
             }
-            for(Map.Entry<T, T> e : other.upperBounds.entrySet()) {
+            lbs.get(false).forEach(e -> lowerBounds.put(e.getKey(), e.getValue()));
+
+            for(Map.Entry<T, T> e : ubs.get(true)) {
                 addUpperBound(e.getKey(), e.getValue(), worklist::addLast);
             }
-            for(Map.Entry<T, T> e : other.closure.entrySet()) {
+            ubs.get(false).forEach(e -> upperBounds.put(e.getKey(), e.getValue()));
+
+            for(Map.Entry<T, T> e : cls.get(true)) {
                 addVars(e.getKey(), e.getValue(), worklist::addLast);
             }
+            cls.get(false).forEach(e -> closure.put(e.getKey(), e.getValue()));
+
             doAdd(worklist);
         }
 
@@ -261,27 +295,52 @@ public class ConstraintStore<T> {
             add.applyAll(constraints);
         }
 
-        public Iterable<T> allVars() {
-            return Iterables.concat(lowerBounds.keySet(), upperBounds.keySet(), closure.keySet(), closure.valueSet());
-        }
+        public List<Entry<T, T>> gc(Collection<T> live) {
+            final ImmutableList.Builder<Map.Entry<T, T>> substBuilder = ImmutableList.builder();
+            final Deque<Map.Entry<T, T>> worklist = new LinkedList<>();
+            fix: while(true) {
+                final java.util.Set<T> inactiveVars = inactiveVars(live).stream().collect(Collectors.toSet());
+                if(inactiveVars.isEmpty()) {
+                    break;
+                }
+                for(Entry<T, T> bound : computeBounds(inactiveVars)) {
+                    substBuilder.add(bound);
+                    T v = bound.getKey();
+                    T ty = bound.getValue();
 
-        private Optional<T> getBound(T v) {
-            final Map.Transient<T, T> bounds;
-            if(ops.isPos(v)) {
-                bounds = lowerBounds;
-            } else if(ops.isNeg(v)) {
-                bounds = upperBounds;
-            } else {
-                throw new IllegalStateException("Expected var, got " + v);
+                    // capture these before removing the variable
+                    java.util.Set<T> lowerNegVars = getLowerNegsIfPosVar(v);
+
+                    lowerBounds.__remove(v);
+                    upperBounds.__remove(v);
+                    closure.removeKey(v);
+                    closure.removeValue(v);
+
+                    try {
+                        for(T lv : lowerNegVars) {
+                            addUpperBound(lv, ty, worklist::addLast);
+                        }
+                        doAdd(worklist);
+                        // Ignore the rest of the computed bounds, and go to next
+                        // fixed point iteration. Not sure if this is necessary,
+                        // but adding the bound may re-add constraints on the
+                        // variables in ty (which comes later in the components)
+                        continue fix;
+                    } catch(ConstraintException ex) {
+                        throw new IllegalStateException(
+                                "Adding bounds during garbage collection should always succeed.", ex);
+                    }
+
+
+                }
             }
-            return Optional.ofNullable(bounds.get(v));
+
+            final ImmutableList<Entry<T, T>> subst = substBuilder.build();
+            return subst.reverse();
         }
 
-        public Map.Immutable<T, T> gc(Collection<T> live) {
+        private java.util.Set<T> inactiveVars(Collection<T> live) {
             final java.util.Set<T> inactiveVars = Sets.newHashSet(allVars());
-
-            //            logger.info("live = {}", live);
-
             // discover reachable
             final java.util.Set<T> visited = new HashSet<>();
             final Deque<T> worklist = new LinkedList<>();
@@ -307,45 +366,46 @@ public class ConstraintStore<T> {
                     worklist.add(upperBounds.get(var));
                 }
             }
+            return inactiveVars;
+        }
 
-            //            logger.info("gc = {}", inactiveVars);
-
-            final TopoSortedComponents<T> components = TopoSorter.sort(inactiveVars, v -> {
-                return getBound(v)
-                        .map(ty -> ops.allVars(ty)
-                                .orElseThrow(() -> new IllegalStateException("Failed to get vars of " + ty)).stream()
-                                .filter(inactiveVars::contains).collect(Collectors.toList()))
-                        .orElse(ImmutableList.of());
+        private List<Entry<T, T>> computeBounds(Collection<T> vars) {
+            final TopoSortedComponents<T> components = TopoSorter.sort(vars, v -> {
+                java.util.Set<T> negLVars = getLowerNegsIfPosVar(v);
+                java.util.Set<T> bndVars = getBound(v).map(ty -> {
+                    return ops.allVars(ty).orElseThrow(() -> new IllegalStateException("Failed to get vars of " + ty))
+                            .stream().filter(vars::contains).collect(Collectors.toSet());
+                }).orElse(Collections.emptySet());
+                return Sets.union(negLVars, bndVars);
             });
 
-            final Map.Transient<T, T> subst = Map.Transient.of();
+            final ImmutableList.Builder<Map.Entry<T, T>> subst = ImmutableList.builder();
             for(Set.Immutable<T> component : components) {
                 if(component.size() != 1) {
                     throw new IllegalStateException("Expected singleton components, got " + component);
                 }
                 T v = Iterables.getOnlyElement(component);
-
-                if(ops.isPos(v)) {
-                    getBound(v).ifPresent(ty -> {
-                        subst.__put(v, ty);
-                    });
-                }
-
-                lowerBounds.__remove(v);
-                upperBounds.__remove(v);
-                closure.removeKey(v);
-                closure.removeValue(v);
+                getBound(v).ifPresent(ty -> subst.add(ImmutableTuple2.of(v, ty)));
             }
-            final Map.Immutable<T, T> _subst = subst.freeze();
-            //            logger.info("subst = {}", _subst);
-            // Is it necessary to apply this substitution to the constraint
-            // store? It is if the variables in the substitution can still
-            // appear in one of the bounds (they are already removed from
-            // the domain of closure and bounds). All the remaining variables
-            // are still live, which means the variables in their bounds are
-            // also marked as live. Therefore, they cannot appear in this
-            // substitution.
-            return _subst;
+
+            return subst.build();
+        }
+
+        private Optional<T> getBound(T v) {
+            if(ops.isPos(v)) {
+                return Optional.ofNullable(lowerBounds.get(v));
+            } else if(ops.isNeg(v)) {
+                return Optional.ofNullable(upperBounds.get(v));
+            } else {
+                throw new IllegalStateException("Expceted variable, got " + v);
+            }
+        }
+
+        private java.util.Set<T> getLowerNegsIfPosVar(T v) {
+            if(ops.isPos(v)) {
+                return closure.inverse().get(v).stream().filter(ops::isNeg).collect(Collectors.toSet());
+            }
+            return Collections.emptySet();
         }
 
         public ConstraintStore<T> freeze() {
