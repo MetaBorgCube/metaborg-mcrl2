@@ -2,14 +2,10 @@ module mcrl2
 
 imports
   
-  completion/completion
-  pp
-  outline
+  editor
 
-rules // Debugging
+rules
+
+  editor-format = editor-action-pp(id|"pp")
+  debug-show-aterm = editor-action-ast(id|"")
   
-  debug-show-aterm:
-    (node, _, _, path, project-path) -> (filename, result)
-    with
-      filename := <guarantee-extension(|"aterm")> path
-    ; result   := node

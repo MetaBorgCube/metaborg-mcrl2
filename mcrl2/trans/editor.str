@@ -1,0 +1,30 @@
+module editor
+
+imports
+  
+  libspoofax/editor/refactoring/-
+  libspoofax/editor/outline
+  
+  mcrl2/syntax/pp
+
+rules
+
+  editor-action-pp(f|op): (node, _, _, path, _) -> (filename, prettyprinted)
+    with
+      ext           := <get-extension> path
+    ; filename      := <guarantee-extension(|$[[op].[ext]])> path
+    ; prettyprinted := <f ; pp-mcrl2-string> node
+  
+  editor-action-ast(f|op): (node, _, _, path, _) -> (filename, result)
+    with
+      filename := <guarantee-extension(|$[[op].aterm])> path
+    ; result   := <f> node
+  
+  editor-outline:
+    (_, _, ast, path, project-path) -> outline
+    where
+      outline := <simple-label-outline(to-outline-label)> ast
+  
+  to-outline-label = fail
+  
+  construct-textual-change = construct-textual-change(pp-partial-mcrl2-string, parenthesize, override-reconstruction, resugar)
